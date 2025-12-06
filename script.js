@@ -121,12 +121,16 @@ function render() {
                 };
 
                 item.innerHTML = `
-                    <span>${todo.text}</span>
-                    <span class="controls">
-                        <button onclick="moveTodo(${gi}, ${ti}, -1)">⬆</button>
-                        <button onclick="moveTodo(${gi}, ${ti}, 1)">⬇</button>
-                        <button onclick="deleteTodo(${gi}, ${ti})">🗑</button>
-                    </span>
+                    <div class="note-item">
+                    <span class="note-text">${todo.text}</span>
+                      <div class="note-actions">
+                   
+                        <button class="icon-button up" onclick="moveTodo(${gi}, ${ti}, -1)">⬆</button>
+                        <button class="icon-button down" onclick="moveTodo(${gi}, ${ti}, 1)">⬇</button>
+                        <button class="icon-button delete" onclick="deleteTodo(${gi}, ${ti})">🗑</button>
+                   
+                    </div>
+                    </div>   
                 `;
 
                 list.appendChild(item);
