@@ -1,3 +1,6 @@
+// Experimenting with using the same script for both extension and web page.
+// So, this is not used and replaced by /firefox-extension/sidebar.js for now.
+
 let groups = JSON.parse(localStorage.getItem("todo-groups") || "[]");
 let dragging = null;
 

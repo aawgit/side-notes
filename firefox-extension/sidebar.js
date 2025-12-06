@@ -60,7 +60,21 @@ function render() {
 
         const header = document.createElement("div");
         header.className = "group-header";
-        header.innerHTML = `<strong>${group.title}</strong> <span>${group.collapsed ? "▼" : "▲"}</span>`;
+        // Clear previous content
+        header.textContent = "";
+
+        // Title <strong>
+        const titleEl = document.createElement("strong");
+        titleEl.textContent = group.title;
+
+        // Arrow <span>
+        const arrowEl = document.createElement("span");
+        arrowEl.textContent = group.collapsed ? "▼" : "▲";
+
+        // Add both
+        header.appendChild(titleEl);
+        header.appendChild(arrowEl);
+
         header.onclick = () => {
             group.collapsed = !group.collapsed;
             save();
@@ -120,50 +134,47 @@ function render() {
                     render();
                 };
 
-                // create text span
-const textSpan = document.createElement("span");
-textSpan.textContent = todo.text;
+                // Clear previous content (required because we no longer use innerHTML)
+                item.textContent = "";
 
-// create controls container
-const controls = document.createElement("span");
-controls.className = "controls";
+                // Wrapper
+                const wrapper = document.createElement("div");
+                wrapper.className = "note-item";
 
-// up button
-const upBtn = document.createElement("button");
-upBtn.type = "button";
-upBtn.textContent = "⬆";
-upBtn.addEventListener("click", (e) => {
-  e.stopPropagation(); // avoid toggling collapse if header listens
-  moveTodo(gi, ti, -1);
-});
+                // Text span
+                const textSpan = document.createElement("span");
+                textSpan.className = "note-text";
+                textSpan.textContent = todo.text;
 
-// down button
-const downBtn = document.createElement("button");
-downBtn.type = "button";
-downBtn.textContent = "⬇";
-downBtn.addEventListener("click", (e) => {
-  e.stopPropagation();
-  moveTodo(gi, ti, 1);
-});
+                // Actions container
+                const actions = document.createElement("div");
+                actions.className = "note-actions";
 
-// delete button
-const delBtn = document.createElement("button");
-delBtn.type = "button";
-delBtn.textContent = "🗑";
-delBtn.addEventListener("click", (e) => {
-  e.stopPropagation();
-  deleteTodo(gi, ti);
-});
+                // Buttons
+                const upBtn = document.createElement("button");
+                upBtn.className = "icon-button up";
+                upBtn.textContent = "⬆";
+                upBtn.addEventListener("click", () => moveTodo(gi, ti, -1));
 
-// assemble
-controls.appendChild(upBtn);
-controls.appendChild(downBtn);
-controls.appendChild(delBtn);
+                const downBtn = document.createElement("button");
+                downBtn.className = "icon-button down";
+                downBtn.textContent = "⬇";
+                downBtn.addEventListener("click", () => moveTodo(gi, ti, 1));
 
-// make sure item is empty and append structured children
-item.innerHTML = "";       // remove any previous content
-item.appendChild(textSpan);
-item.appendChild(controls);
+                const deleteBtn = document.createElement("button");
+                deleteBtn.className = "icon-button delete";
+                deleteBtn.textContent = "🗑";
+                deleteBtn.addEventListener("click", () => deleteTodo(gi, ti));
+
+                // Put actions together
+                actions.appendChild(upBtn);
+                actions.appendChild(downBtn);
+                actions.appendChild(deleteBtn);
+
+                // Build item
+                wrapper.appendChild(textSpan);
+                wrapper.appendChild(actions);
+                item.appendChild(wrapper);
 
 
                 list.appendChild(item);
