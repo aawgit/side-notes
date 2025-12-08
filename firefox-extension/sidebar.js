@@ -166,9 +166,30 @@ function render() {
                 deleteBtn.textContent = "🗑";
                 deleteBtn.addEventListener("click", () => deleteTodo(gi, ti));
 
+                const copyBtn = document.createElement("button");
+                copyBtn.className = "icon-button copy";
+                copyBtn.textContent = "📋";
+                copyBtn.title = "Copy to clipboard";
+
+                copyBtn.addEventListener("click", async () => {
+                    try {
+                        await navigator.clipboard.writeText(todo.text);
+
+                        // Small visual feedback
+                        copyBtn.textContent = "✅";
+                        setTimeout(() => {
+                            copyBtn.textContent = "📋";
+                        }, 800);
+                    } catch (err) {
+                        console.error("Clipboard copy failed", err);
+                    }
+                });
+
+
                 // Put actions together
                 actions.appendChild(upBtn);
                 actions.appendChild(downBtn);
+                actions.appendChild(copyBtn);
                 actions.appendChild(deleteBtn);
 
                 // Build item
