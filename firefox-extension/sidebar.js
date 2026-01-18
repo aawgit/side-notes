@@ -10,7 +10,7 @@ function addGroup() {
     const name = input.value.trim();
     if (!name) return;
 
-    groups.push({ title: name, todos: [], collapsed: false });
+    groups.unshift({ title: name, todos: [], collapsed: false });
     input.value = "";
     save();
     render();
@@ -24,7 +24,7 @@ document.getElementById("newTitle").addEventListener("keypress", e => {
 function addTodo(groupIndex, text) {
     if (!text.trim()) return;
 
-    groups[groupIndex].todos.push({ text });
+    groups[groupIndex].todos.unshift({ text });
     save();
     render();
 }
@@ -85,6 +85,30 @@ function render() {
         if (!group.collapsed) {
             const list = document.createElement("div");
             list.className = "todo-list";
+
+            const addInput = document.createElement("div");
+            addInput.className = "add-todo-input";
+
+            const input = document.createElement("input");
+            input.placeholder = "Add todo...";
+            input.addEventListener("keypress", e => {
+                if (e.key === "Enter") {
+                    addTodo(gi, input.value);
+                    input.value = "";
+                }
+            });
+
+            const btn = document.createElement("button");
+            btn.className = "add";
+            btn.textContent = "Add";
+            btn.onclick = () => {
+                addTodo(gi, input.value);
+                input.value = "";
+            };
+
+            addInput.appendChild(input);
+            addInput.appendChild(btn);
+            list.appendChild(addInput);
 
             group.todos.forEach((todo, ti) => {
                 const item = document.createElement("div");
@@ -201,29 +225,6 @@ function render() {
                 list.appendChild(item);
             });
 
-            const addInput = document.createElement("div");
-            addInput.className = "add-todo-input";
-
-            const input = document.createElement("input");
-            input.placeholder = "Add todo...";
-            input.addEventListener("keypress", e => {
-                if (e.key === "Enter") {
-                    addTodo(gi, input.value);
-                    input.value = "";
-                }
-            });
-
-            const btn = document.createElement("button");
-            btn.className = "add";
-            btn.textContent = "Add";
-            btn.onclick = () => {
-                addTodo(gi, input.value);
-                input.value = "";
-            };
-
-            addInput.appendChild(input);
-            addInput.appendChild(btn);
-            list.appendChild(addInput);
             g.appendChild(list);
         }
 
