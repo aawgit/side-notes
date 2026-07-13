@@ -14,7 +14,7 @@
 <div class="app-header">
     <h1>Side notes</h1>
     <div class="sync-area">
-        <span id="syncIndicator" class="sync-indicator" aria-label="Sync status"></span>
+        <button id="syncBtn" class="sync-btn" hidden>Sync</button>
         <button id="settingsBtn" class="icon-button settings-btn" title="Sync settings">⚙</button>
     </div>
 </div>
@@ -42,7 +42,6 @@
         </div>
         <p id="lastSyncText" class="last-sync-text">Last synced: never</p>
         <div class="settings-actions">
-            <button id="syncNowBtn" class="add">Sync Now</button>
             <button id="disconnectBtn" class="btn-danger">Disconnect</button>
         </div>
     </div>
@@ -111,33 +110,39 @@ function showError(msg) {
 const meta = getSyncMeta();
 if (meta.enabled && meta.dropboxToken) showConnected(); else showDisconnected();
 
-// ── Sync status indicator ──────────────────────────────────────────────────────
+// ── Sync button ────────────────────────────────────────────────────────────────
 
-const indicator = document.getElementById('syncIndicator');
+const syncBtn = document.getElementById('syncBtn');
+let _revertTimer = null;
 
 function applyStatus(status, detail) {
-    indicator.className = `sync-indicator ${status}`;
-    if (status === Status.OK) {
-        indicator.textContent = `✓ Synced ${relativeTime(detail)}`;
-        indicator.title = '';
+    clearTimeout(_revertTimer);
+    syncBtn.hidden   = (status === Status.DISCONNECTED);
+    syncBtn.disabled = (status === Status.SYNCING);
+    syncBtn.className = `sync-btn${status !== Status.DISCONNECTED ? ' ' + status : ''}`;
+
+    if (status === Status.SYNCING) {
+        syncBtn.textContent = 'Syncing…';
+    } else if (status === Status.OK) {
+        syncBtn.textContent = '✓ Synced';
         const lst = document.getElementById('lastSyncText');
         if (lst) lst.textContent = `Last synced: ${relativeTime(detail)}`;
-    } else if (status === Status.SYNCING) {
-        indicator.textContent = 'Syncing…';
-        indicator.title = '';
+        _revertTimer = setTimeout(() => {
+            syncBtn.textContent = 'Sync';
+            syncBtn.className   = 'sync-btn';
+        }, 2500);
     } else if (status === Status.ERROR) {
-        indicator.textContent = `⚠ Sync error`;
-        indicator.title = detail ?? '';
-    } else {
-        indicator.textContent = '';
+        syncBtn.textContent = '⚠ Retry';
     }
 }
 
-// Apply current status immediately (sidebar.js may have already emitted one)
+// Pick up whatever status sidebar.js already emitted during boot.
 const initial = getStatus();
 applyStatus(initial.status, initial.detail);
 
 onStatusChange(applyStatus);
+
+syncBtn.addEventListener('click', () => performSync().catch(() => {}));
 
 // ── Settings button ────────────────────────────────────────────────────────────
 
@@ -191,11 +196,7 @@ document.getElementById('disconnectBtn').addEventListener('click', () => {
     applyStatus(Status.DISCONNECTED, null);
 });
 
-// ── Sync now ───────────────────────────────────────────────────────────────────
 
-document.getElementById('syncNowBtn').addEventListener('click', () => {
-    performSync().catch(() => {});
-});
 </script>
 
 </body>

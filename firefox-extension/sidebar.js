@@ -1,5 +1,5 @@
 import { loadGroups, saveGroups, getDeviceId, trackDeletedId, getSyncMeta, setSyncMeta } from './lib/store.js';
-import { performSync, scheduleSyncAfterEdit, startPeriodicSync, initSync } from './lib/sync.js';
+import { performSync, initSync } from './lib/sync.js';
 import { handleOAuthCallback } from './lib/dropbox.js';
 
 // ── State ──────────────────────────────────────────────────────────────────────
@@ -11,7 +11,6 @@ let dragging = null; // { groupId, todoId }
 
 function save() {
     saveGroups(groups);
-    scheduleSyncAfterEdit();
 }
 
 // ── Mutations ──────────────────────────────────────────────────────────────────
@@ -255,11 +254,6 @@ window.addEventListener('sn:synced', (e) => {
     render();
 });
 
-// Sync when the user returns to the tab / app (covers mobile backgrounding).
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') performSync().catch(() => {});
-});
-
 // ── Startup ────────────────────────────────────────────────────────────────────
 
 async function boot() {
@@ -289,7 +283,6 @@ async function boot() {
     const cfg = getSyncMeta();
     if (cfg.enabled && cfg.dropboxToken) {
         await performSync().catch(() => {});
-        startPeriodicSync();
     }
 }
 
