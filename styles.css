@@ -31,32 +31,38 @@ h1 {
     flex-shrink: 0;
 }
 
-/* Sync status dot/icon next to the gear */
+/* Sync status badge next to the gear */
 .sync-indicator {
-    font-size: 13px;
-    width: 18px;
-    text-align: center;
-    color: transparent; /* hidden when disconnected */
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 10px;
+    white-space: nowrap;
+    display: none;          /* hidden when disconnected */
 }
-
-.sync-indicator::before { content: ''; }
 
 .sync-indicator.syncing {
-    color: #888;
-    animation: sn-spin 1s linear infinite;
     display: inline-block;
+    background: #2a2a2a;
+    color: #888;
+    animation: sn-pulse 1.2s ease-in-out infinite;
 }
-.sync-indicator.syncing::before { content: '⟳'; }
 
-.sync-indicator.ok { color: #4caf50; }
-.sync-indicator.ok::before { content: '✓'; }
+.sync-indicator.ok {
+    display: inline-block;
+    background: #1a2e1a;
+    color: #4caf50;
+}
 
-.sync-indicator.error { color: #ff9800; }
-.sync-indicator.error::before { content: '⚠'; }
+.sync-indicator.error {
+    display: inline-block;
+    background: #2e1f0a;
+    color: #ff9800;
+}
 
-@keyframes sn-spin {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
+@keyframes sn-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
 }
 
 .settings-btn {

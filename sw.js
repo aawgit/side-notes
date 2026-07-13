@@ -3,7 +3,7 @@
 // Keeps the app installable and usable offline.
 // All sync logic runs in the main thread — this worker only caches static assets.
 
-const CACHE = 'side-notes-v1';
+const CACHE = 'side-notes-v2';
 
 const ASSETS = [
     './',

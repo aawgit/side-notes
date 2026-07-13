@@ -118,15 +118,18 @@ const indicator = document.getElementById('syncIndicator');
 function applyStatus(status, detail) {
     indicator.className = `sync-indicator ${status}`;
     if (status === Status.OK) {
-        indicator.title = `Synced ${relativeTime(detail)}`;
+        indicator.textContent = `✓ Synced ${relativeTime(detail)}`;
+        indicator.title = '';
         const lst = document.getElementById('lastSyncText');
         if (lst) lst.textContent = `Last synced: ${relativeTime(detail)}`;
     } else if (status === Status.SYNCING) {
-        indicator.title = 'Syncing…';
+        indicator.textContent = 'Syncing…';
+        indicator.title = '';
     } else if (status === Status.ERROR) {
-        indicator.title = `Sync error: ${detail}`;
+        indicator.textContent = `⚠ Sync error`;
+        indicator.title = detail ?? '';
     } else {
-        indicator.title = 'Sync not connected';
+        indicator.textContent = '';
     }
 }
 
