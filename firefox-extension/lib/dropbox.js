@@ -52,7 +52,8 @@ export async function startOAuth(appKey) {
         redirect_uri:          redirectUri,
         code_challenge:        challenge,
         code_challenge_method: 'S256',
-        token_access_type:     'offline',   // requests a refresh token
+        token_access_type:     'offline',
+        scope:                 'files.content.read files.content.write',
     });
     window.location.href = `${AUTH_ENDPOINT}?${params}`;
 }
