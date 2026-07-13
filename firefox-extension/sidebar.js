@@ -1,77 +1,107 @@
-let groups = JSON.parse(localStorage.getItem("todo-groups") || "[]");
-let dragging = null;
+import { loadGroups, saveGroups, getDeviceId, trackDeletedId, getSyncMeta, setSyncMeta } from './lib/store.js';
+import { performSync, scheduleSyncAfterEdit, startPeriodicSync, initSync } from './lib/sync.js';
+import { handleOAuthCallback } from './lib/dropbox.js';
+
+// ── State ──────────────────────────────────────────────────────────────────────
+
+let groups   = loadGroups();
+let dragging = null; // { groupId, todoId }
+
+// ── Persistence ────────────────────────────────────────────────────────────────
 
 function save() {
-    localStorage.setItem("todo-groups", JSON.stringify(groups));
+    saveGroups(groups);
+    scheduleSyncAfterEdit();
 }
+
+// ── Mutations ──────────────────────────────────────────────────────────────────
 
 function addGroup() {
-    const input = document.getElementById("newTitle");
-    const name = input.value.trim();
+    const input = document.getElementById('newTitle');
+    const name  = input.value.trim();
     if (!name) return;
 
-    groups.unshift({ title: name, todos: [], collapsed: false });
-    input.value = "";
+    groups.unshift({
+        id:            crypto.randomUUID(),
+        title:         name,
+        todos:         [],
+        collapsed:     false,
+        _lastModified: Date.now(),
+        _deviceId:     getDeviceId(),
+    });
+    input.value = '';
     save();
     render();
 }
 
-document.getElementById("addTitleBtn").onclick = addGroup;
-document.getElementById("newTitle").addEventListener("keypress", e => {
-    if (e.key === "Enter") addGroup();
-});
-
-function addTodo(groupIndex, text) {
+function addTodo(groupId, text) {
     if (!text.trim()) return;
+    const group = groups.find(g => g.id === groupId);
+    if (!group) return;
 
-    groups[groupIndex].todos.unshift({ text });
+    group.todos.unshift({
+        id:            crypto.randomUUID(),
+        text,
+        _lastModified: Date.now(),
+        _deviceId:     getDeviceId(),
+    });
     save();
     render();
 }
 
-function deleteTodo(groupIndex, todoIndex) {
-    groups[groupIndex].todos.splice(todoIndex, 1);
+function deleteTodo(groupId, todoId) {
+    const gi = groups.findIndex(g => g.id === groupId);
+    if (gi === -1) return;
 
-    if (groups[groupIndex].todos.length === 0) {
-        groups.splice(groupIndex, 1);  // auto delete group
+    const ti = groups[gi].todos.findIndex(t => t.id === todoId);
+    if (ti === -1) return;
+
+    trackDeletedId(todoId);
+    groups[gi].todos.splice(ti, 1);
+
+    if (groups[gi].todos.length === 0) {
+        trackDeletedId(groups[gi].id);
+        groups.splice(gi, 1);
     }
 
     save();
     render();
 }
 
-function moveTodo(groupIndex, todoIndex, direction) {
-    const arr = groups[groupIndex].todos;
-    const newIndex = todoIndex + direction;
-    if (newIndex < 0 || newIndex >= arr.length) return;
+function moveTodo(groupId, todoId, direction) {
+    const group = groups.find(g => g.id === groupId);
+    if (!group) return;
 
-    [arr[todoIndex], arr[newIndex]] = [arr[newIndex], arr[todoIndex]];
+    const ti = group.todos.findIndex(t => t.id === todoId);
+    const ni = ti + direction;
+    if (ti === -1 || ni < 0 || ni >= group.todos.length) return;
+
+    [group.todos[ti], group.todos[ni]] = [group.todos[ni], group.todos[ti]];
     save();
     render();
 }
 
+// ── Render ─────────────────────────────────────────────────────────────────────
+
 function render() {
-    const container = document.getElementById("groupsContainer");
-    container.innerHTML = "";
+    const container = document.getElementById('groupsContainer');
+    container.innerHTML = '';
 
-    groups.forEach((group, gi) => {
-        const g = document.createElement("div");
-        g.className = "group";
+    groups.forEach((group) => {
+        const groupId = group.id;
 
-        const header = document.createElement("div");
-        header.className = "group-header";
-        // Clear previous content
-        header.textContent = "";
+        const g = document.createElement('div');
+        g.className = 'group';
 
-        // Title <strong>
-        const titleEl = document.createElement("strong");
+        const header = document.createElement('div');
+        header.className = 'group-header';
+
+        const titleEl = document.createElement('strong');
         titleEl.textContent = group.title;
 
-        // Arrow <span>
-        const arrowEl = document.createElement("span");
-        arrowEl.textContent = group.collapsed ? "▼" : "▲";
+        const arrowEl = document.createElement('span');
+        arrowEl.textContent = group.collapsed ? '▼' : '▲';
 
-        // Add both
         header.appendChild(titleEl);
         header.appendChild(arrowEl);
 
@@ -83,145 +113,125 @@ function render() {
         g.appendChild(header);
 
         if (!group.collapsed) {
-            const list = document.createElement("div");
-            list.className = "todo-list";
+            const list = document.createElement('div');
+            list.className = 'todo-list';
 
-            const addInput = document.createElement("div");
-            addInput.className = "add-todo-input";
+            const addInput = document.createElement('div');
+            addInput.className = 'add-todo-input';
 
-            const input = document.createElement("input");
-            input.placeholder = "Add todo...";
-            input.addEventListener("keypress", e => {
-                if (e.key === "Enter") {
-                    addTodo(gi, input.value);
-                    input.value = "";
-                }
+            const input = document.createElement('input');
+            input.placeholder = 'Add todo...';
+            input.addEventListener('keypress', e => {
+                if (e.key === 'Enter') { addTodo(groupId, input.value); input.value = ''; }
             });
 
-            const btn = document.createElement("button");
-            btn.className = "add";
-            btn.textContent = "Add";
-            btn.onclick = () => {
-                addTodo(gi, input.value);
-                input.value = "";
-            };
+            const btn = document.createElement('button');
+            btn.className = 'add';
+            btn.textContent = 'Add';
+            btn.onclick = () => { addTodo(groupId, input.value); input.value = ''; };
 
             addInput.appendChild(input);
             addInput.appendChild(btn);
             list.appendChild(addInput);
 
-            group.todos.forEach((todo, ti) => {
-                const item = document.createElement("div");
-                item.className = "todo";
+            group.todos.forEach((todo) => {
+                const todoId = todo.id;
+                const item   = document.createElement('div');
+                item.className = 'todo';
                 item.draggable = true;
-
                 let dragXStart = 0;
 
                 item.ondragstart = () => {
-                    dragging = { gi, ti };
+                    dragging   = { groupId, todoId };
                     dragXStart = event.clientX;
-                    item.classList.add("dragging");
+                    item.classList.add('dragging');
                 };
 
                 item.ondrag = (event) => {
                     if (event.clientX === 0) return;
-                    let deltaX = event.clientX - dragXStart;
+                    const deltaX = event.clientX - dragXStart;
                     item.style.transform = `translateX(${deltaX}px)`;
-                    if (deltaX > 180) item.style.opacity = 0.5;  // visual delete hint
+                    if (deltaX > 180) item.style.opacity = 0.5;
                 };
 
                 item.ondragend = (event) => {
-                    item.classList.remove("dragging");
-                    let deltaX = event.clientX - dragXStart;
-
-                    item.style.transform = "translateX(0)";
-                    item.style.opacity = 1;
-
-                    if (deltaX > 150) {
-                        deleteTodo(gi, ti); // delete when dragged right
-                        return;
-                    }
+                    item.classList.remove('dragging');
+                    const deltaX = event.clientX - dragXStart;
+                    item.style.transform = 'translateX(0)';
+                    item.style.opacity   = 1;
+                    if (deltaX > 150) { deleteTodo(groupId, todoId); return; }
                 };
 
                 item.ondragover = (e) => e.preventDefault();
-                item.ondrop = (e) => {
-                    const dragged = groups[dragging.gi].todos[dragging.ti];
-                    groups[dragging.gi].todos.splice(dragging.ti, 1);
-                    groups[gi].todos.splice(ti, 0, dragged);
 
-                    // Cleanup if previous group empty
-                    if (groups[dragging.gi].todos.length === 0) {
-                        groups.splice(dragging.gi, 1);
+                item.ondrop = () => {
+                    if (!dragging) return;
+                    const srcGroup = groups.find(g => g.id === dragging.groupId);
+                    if (!srcGroup) return;
+                    const srcIdx = srcGroup.todos.findIndex(t => t.id === dragging.todoId);
+                    if (srcIdx === -1) return;
+
+                    const [dragged] = srcGroup.todos.splice(srcIdx, 1);
+                    const tgtGroup  = groups.find(g => g.id === groupId);
+                    const tgtIdx    = tgtGroup.todos.findIndex(t => t.id === todoId);
+                    tgtGroup.todos.splice(tgtIdx, 0, dragged);
+
+                    if (srcGroup.todos.length === 0 && srcGroup.id !== groupId) {
+                        trackDeletedId(srcGroup.id);
+                        groups.splice(groups.indexOf(srcGroup), 1);
                     }
 
                     save();
                     render();
                 };
 
-                // Clear previous content (required because we no longer use innerHTML)
-                item.textContent = "";
+                const wrapper = document.createElement('div');
+                wrapper.className = 'note-item';
 
-                // Wrapper
-                const wrapper = document.createElement("div");
-                wrapper.className = "note-item";
-
-                // Text span
-                const textSpan = document.createElement("span");
-                textSpan.className = "note-text";
+                const textSpan = document.createElement('span');
+                textSpan.className   = 'note-text';
                 textSpan.textContent = todo.text;
 
-                // Actions container
-                const actions = document.createElement("div");
-                actions.className = "note-actions";
+                const actions = document.createElement('div');
+                actions.className = 'note-actions';
 
-                // Buttons
-                const upBtn = document.createElement("button");
-                upBtn.className = "icon-button up";
-                upBtn.textContent = "⬆";
-                upBtn.addEventListener("click", () => moveTodo(gi, ti, -1));
+                const upBtn = document.createElement('button');
+                upBtn.className   = 'icon-button up';
+                upBtn.textContent = '⬆';
+                upBtn.addEventListener('click', () => moveTodo(groupId, todoId, -1));
 
-                const downBtn = document.createElement("button");
-                downBtn.className = "icon-button down";
-                downBtn.textContent = "⬇";
-                downBtn.addEventListener("click", () => moveTodo(gi, ti, 1));
+                const downBtn = document.createElement('button');
+                downBtn.className   = 'icon-button down';
+                downBtn.textContent = '⬇';
+                downBtn.addEventListener('click', () => moveTodo(groupId, todoId, 1));
 
-                const deleteBtn = document.createElement("button");
-                deleteBtn.className = "icon-button delete";
-                deleteBtn.textContent = "🗑";
-                deleteBtn.addEventListener("click", () => deleteTodo(gi, ti));
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className   = 'icon-button delete';
+                deleteBtn.textContent = '🗑';
+                deleteBtn.addEventListener('click', () => deleteTodo(groupId, todoId));
 
-                const copyBtn = document.createElement("button");
-                copyBtn.className = "icon-button copy";
-                copyBtn.textContent = "📋";
-                copyBtn.title = "Copy to clipboard";
-
-                copyBtn.addEventListener("click", async () => {
+                const copyBtn = document.createElement('button');
+                copyBtn.className   = 'icon-button copy';
+                copyBtn.textContent = '📋';
+                copyBtn.title       = 'Copy to clipboard';
+                copyBtn.addEventListener('click', async () => {
                     try {
                         await navigator.clipboard.writeText(todo.text);
-
-                        // Small visual feedback
-                        copyBtn.textContent = "✅";
-                        setTimeout(() => {
-                            copyBtn.textContent = "📋";
-                        }, 800);
+                        copyBtn.textContent = '✅';
+                        setTimeout(() => { copyBtn.textContent = '📋'; }, 800);
                     } catch (err) {
-                        console.error("Clipboard copy failed", err);
+                        console.error('Clipboard copy failed', err);
                     }
                 });
 
-
-                // Put actions together
                 actions.appendChild(upBtn);
                 actions.appendChild(downBtn);
                 actions.appendChild(copyBtn);
                 actions.appendChild(deleteBtn);
 
-                // Build item
                 wrapper.appendChild(textSpan);
                 wrapper.appendChild(actions);
                 item.appendChild(wrapper);
-
-
                 list.appendChild(item);
             });
 
@@ -232,5 +242,56 @@ function render() {
     });
 }
 
-render();
+// ── Event wiring ───────────────────────────────────────────────────────────────
+
+document.getElementById('addTitleBtn').addEventListener('click', addGroup);
+document.getElementById('newTitle').addEventListener('keypress', e => {
+    if (e.key === 'Enter') addGroup();
+});
+
+// Re-render when a sync cycle delivers a merged state.
+window.addEventListener('sn:synced', (e) => {
+    groups = e.detail.groups;
+    render();
+});
+
+// Sync when the user returns to the tab / app (covers mobile backgrounding).
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') performSync().catch(() => {});
+});
+
+// ── Startup ────────────────────────────────────────────────────────────────────
+
+async function boot() {
+    // Complete an OAuth redirect if Dropbox sent us back with a code.
+    const meta = getSyncMeta();
+    if (window.location.search.includes('code=') && meta.appKey) {
+        try {
+            const tokens = await handleOAuthCallback(meta.appKey);
+            if (tokens) {
+                setSyncMeta({
+                    enabled:             true,
+                    dropboxToken:        tokens.accessToken,
+                    dropboxRefreshToken: tokens.refreshToken,
+                    dropboxTokenExpiry:  tokens.expiry,
+                });
+                window.dispatchEvent(new Event('sn:auth-complete'));
+            }
+        } catch (err) {
+            console.error('[sn:boot] OAuth error:', err);
+            window.dispatchEvent(new CustomEvent('sn:auth-error', { detail: err.message }));
+        }
+    }
+
+    render();
+    initSync();
+
+    const cfg = getSyncMeta();
+    if (cfg.enabled && cfg.dropboxToken) {
+        await performSync().catch(() => {});
+        startPeriodicSync();
+    }
+}
+
+boot();
 

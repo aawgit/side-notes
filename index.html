@@ -5,11 +5,48 @@
 <title>Side notes</title>
 <link rel="stylesheet" href="styles.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#121212">
 <link rel="icon" type="image/x-icon" href="firefox-extension/icons/favicon.png">
+<link rel="manifest" href="manifest.json">
 </head>
 <body>
 
-<h1>Side notes</h1>
+<div class="app-header">
+    <h1>Side notes</h1>
+    <div class="sync-area">
+        <span id="syncIndicator" class="sync-indicator" aria-label="Sync status"></span>
+        <button id="settingsBtn" class="icon-button settings-btn" title="Sync settings">⚙</button>
+    </div>
+</div>
+
+<!-- Settings / sync panel (hidden until opened) -->
+<div id="settingsPanel" class="settings-panel" hidden>
+    <h2>Dropbox Sync</h2>
+
+    <div id="connectSection">
+        <p class="settings-help">
+            Sync notes between all your devices via your own Dropbox.
+            <a href="https://www.dropbox.com/developers/apps/create" target="_blank" rel="noopener noreferrer">Create a free Dropbox app</a>
+            to get an App Key, add this page's URL as a redirect URI, then paste the key below.
+        </p>
+        <label for="appKeyInput">Dropbox App Key</label>
+        <input id="appKeyInput" type="text" placeholder="e.g. abc123xyz" autocomplete="off" spellcheck="false" />
+        <button id="connectBtn" class="add">Connect</button>
+        <p id="connectError" class="settings-error" hidden></p>
+    </div>
+
+    <div id="connectedSection" hidden>
+        <div class="connected-status">
+            <span class="status-dot"></span>
+            <span>Connected to Dropbox</span>
+        </div>
+        <p id="lastSyncText" class="last-sync-text">Last synced: never</p>
+        <div class="settings-actions">
+            <button id="syncNowBtn" class="add">Sync Now</button>
+            <button id="disconnectBtn" class="btn-danger">Disconnect</button>
+        </div>
+    </div>
+</div>
 
 <div class="add-title">
     <input id="newTitle" placeholder="New title...">
@@ -18,7 +55,146 @@
 
 <div id="groupsContainer"></div>
 
-<script src="firefox-extension/sidebar.js"></script>
+<!-- Register service worker for PWA offline support -->
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+</script>
+
+<!-- App logic -->
+<script type="module" src="firefox-extension/sidebar.js"></script>
+
+<!-- Sync settings UI (web app only) -->
+<script type="module">
+import { getSyncMeta, setSyncMeta } from './firefox-extension/lib/store.js';
+import { startOAuth }               from './firefox-extension/lib/dropbox.js';
+import { performSync, onStatusChange, getStatus, Status } from './firefox-extension/lib/sync.js';
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+function relativeTime(ts) {
+    if (!ts) return 'never';
+    const s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 5)    return 'just now';
+    if (s < 60)   return `${s}s ago`;
+    if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+    return new Date(ts).toLocaleTimeString();
+}
+
+// ── Panel sections ─────────────────────────────────────────────────────────────
+
+function showConnected() {
+    document.getElementById('connectSection').hidden   = true;
+    document.getElementById('connectedSection').hidden = false;
+    const { detail } = getStatus();
+    document.getElementById('lastSyncText').textContent =
+        `Last synced: ${relativeTime(detail ?? getSyncMeta().lastSync)}`;
+}
+
+function showDisconnected() {
+    document.getElementById('connectSection').hidden   = false;
+    document.getElementById('connectedSection').hidden = true;
+    const key = getSyncMeta().appKey;
+    if (key) document.getElementById('appKeyInput').value = key;
+    document.getElementById('connectError').hidden = true;
+}
+
+function showError(msg) {
+    const el = document.getElementById('connectError');
+    el.textContent = msg;
+    el.hidden = false;
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+
+const meta = getSyncMeta();
+if (meta.enabled && meta.dropboxToken) showConnected(); else showDisconnected();
+
+// ── Sync status indicator ──────────────────────────────────────────────────────
+
+const indicator = document.getElementById('syncIndicator');
+
+function applyStatus(status, detail) {
+    indicator.className = `sync-indicator ${status}`;
+    if (status === Status.OK) {
+        indicator.title = `Synced ${relativeTime(detail)}`;
+        const lst = document.getElementById('lastSyncText');
+        if (lst) lst.textContent = `Last synced: ${relativeTime(detail)}`;
+    } else if (status === Status.SYNCING) {
+        indicator.title = 'Syncing…';
+    } else if (status === Status.ERROR) {
+        indicator.title = `Sync error: ${detail}`;
+    } else {
+        indicator.title = 'Sync not connected';
+    }
+}
+
+// Apply current status immediately (sidebar.js may have already emitted one)
+const initial = getStatus();
+applyStatus(initial.status, initial.detail);
+
+onStatusChange(applyStatus);
+
+// ── Settings button ────────────────────────────────────────────────────────────
+
+document.getElementById('settingsBtn').addEventListener('click', () => {
+    const panel = document.getElementById('settingsPanel');
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) {
+        // Refresh state when opening
+        const m = getSyncMeta();
+        if (m.enabled && m.dropboxToken) showConnected(); else showDisconnected();
+    }
+});
+
+// ── Connect ────────────────────────────────────────────────────────────────────
+
+document.getElementById('connectBtn').addEventListener('click', () => {
+    const appKey = document.getElementById('appKeyInput').value.trim();
+    if (!appKey) { showError('Please enter your Dropbox App Key.'); return; }
+    setSyncMeta({ appKey });
+    startOAuth(appKey).catch(err => showError(err.message));
+});
+
+// ── Auth complete/error (fired by sidebar.js after the OAuth redirect) ─────────
+
+window.addEventListener('sn:auth-complete', () => {
+    showConnected();
+    document.getElementById('settingsPanel').hidden = false;
+});
+
+window.addEventListener('sn:auth-error', (e) => {
+    showDisconnected();
+    showError(e.detail ?? 'Authentication failed. Please try again.');
+    document.getElementById('settingsPanel').hidden = false;
+});
+
+window.addEventListener('sn:auth-expired', () => {
+    showDisconnected();
+    document.getElementById('settingsPanel').hidden = false;
+});
+
+// ── Disconnect ─────────────────────────────────────────────────────────────────
+
+document.getElementById('disconnectBtn').addEventListener('click', () => {
+    setSyncMeta({
+        enabled:             false,
+        dropboxToken:        null,
+        dropboxRefreshToken: null,
+        dropboxTokenExpiry:  null,
+    });
+    showDisconnected();
+    applyStatus(Status.DISCONNECTED, null);
+});
+
+// ── Sync now ───────────────────────────────────────────────────────────────────
+
+document.getElementById('syncNowBtn').addEventListener('click', () => {
+    performSync().catch(() => {});
+});
+</script>
+
 </body>
 </html>
 

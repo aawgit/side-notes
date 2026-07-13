@@ -9,11 +9,149 @@ body {
     font-size: 15px;
 }
 
-h1 {
+/* ── App header row (title + sync area) ── */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 16px;
+}
+
+h1 {
+    margin: 0;
     font-size: 1.4em;
     font-weight: 400;
     color: #e0e0e0;
+}
+
+.sync-area {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+/* Sync status dot/icon next to the gear */
+.sync-indicator {
+    font-size: 13px;
+    width: 18px;
+    text-align: center;
+    color: transparent; /* hidden when disconnected */
+}
+
+.sync-indicator::before { content: ''; }
+
+.sync-indicator.syncing {
+    color: #888;
+    animation: sn-spin 1s linear infinite;
+    display: inline-block;
+}
+.sync-indicator.syncing::before { content: '⟳'; }
+
+.sync-indicator.ok { color: #4caf50; }
+.sync-indicator.ok::before { content: '✓'; }
+
+.sync-indicator.error { color: #ff9800; }
+.sync-indicator.error::before { content: '⚠'; }
+
+@keyframes sn-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.settings-btn {
+    font-size: 15px;
+    padding: 4px 6px;
+    opacity: 0.6;
+}
+.settings-btn:hover { opacity: 1; }
+
+/* ── Settings / sync panel ── */
+.settings-panel {
+    background: #1a1a1a;
+    border: 1px solid #2c2c2c;
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+}
+
+.settings-panel h2 {
+    margin: 0 0 14px 0;
+    font-size: 1em;
+    font-weight: 500;
+    color: #ddd;
+}
+
+.settings-help {
+    font-size: 13px;
+    color: #888;
+    margin: 0 0 14px 0;
+    line-height: 1.6;
+}
+
+.settings-help a {
+    color: #3b6df2;
+    text-decoration: none;
+}
+.settings-help a:hover { text-decoration: underline; }
+
+.settings-panel label {
+    display: block;
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.settings-error {
+    color: #ff6666;
+    font-size: 13px;
+    margin: 8px 0 0;
+}
+
+.connected-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #ccc;
+    margin-bottom: 6px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4caf50;
+    flex-shrink: 0;
+}
+
+.last-sync-text {
+    font-size: 12px;
+    color: #666;
+    margin: 0 0 14px;
+}
+
+.settings-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-danger {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #c0392b;
+    background: transparent;
+    color: #e57373;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.btn-danger:hover {
+    background: #c0392b;
+    color: #fff;
 }
 
 .group {
