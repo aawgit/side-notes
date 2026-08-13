@@ -317,3 +317,126 @@ button.add:hover {
         padding: 8px 10px;
     }
 }
+
+/* ---- Tab Navigation ---- */
+.tab-navigation {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #2c2c2c;
+    padding-bottom: 8px;
+}
+
+.tab-button {
+    padding: 6px 12px;
+    border: none;
+    background: transparent;
+    color: #888;
+    font-size: 14px;
+    cursor: pointer;
+    transition: color 0.2s, border-bottom 0.2s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -10px;
+    padding-bottom: 16px;
+}
+
+.tab-button:hover {
+    color: #ccc;
+}
+
+.tab-button.active {
+    color: #3b6df2;
+    border-bottom-color: #3b6df2;
+}
+
+/* ---- Day Select Dropdown ---- */
+.day-select {
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid #2a2a2a;
+    background: #151515;
+    color: #aaa;
+    font-size: 12px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.day-select:hover {
+    color: #ddd;
+    border-color: #3a3a3a;
+}
+
+.day-select:focus {
+    outline: none;
+    color: #fff;
+    border-color: #3b6df2;
+    background: #1a1a1a;
+}
+
+/* ---- Week View ---- */
+.week-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.day-card {
+    background: #1e1e1e;
+    border: 1px solid #2c2c2c;
+    border-radius: 8px;
+    padding: 14px;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.day-card:hover {
+    border-color: #3a3a3a;
+    background: #232323;
+}
+
+.day-header {
+    font-weight: 600;
+    font-size: 1em;
+    color: #3b6df2;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #2c2c2c;
+}
+
+.day-todos {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.week-todo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #151515;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    padding: 8px 10px;
+    gap: 8px;
+}
+
+.week-todo-text {
+    flex: 1;
+    color: #e8e8e8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.week-todo-actions {
+    display: flex;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+@media (max-width: 768px) {
+    .week-view {
+        grid-template-columns: 1fr;
+    }
+}
