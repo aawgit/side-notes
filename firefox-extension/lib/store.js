@@ -7,6 +7,7 @@ const STORAGE_KEY     = 'todo-groups';
 const DEVICE_ID_KEY   = 'sn-device-id';
 const SYNC_META_KEY   = 'sn-sync-meta';
 const DELETED_IDS_KEY = 'sn-deleted-ids';
+const LAST_DAY_KEY    = 'sn-last-day';
 
 // ── Device identity ────────────────────────────────────────────────────────────
 
@@ -26,6 +27,7 @@ function migrateTodo(todo, deviceId, now) {
     return {
         id:            todo.id            ?? crypto.randomUUID(),
         text:          todo.text,
+        day:           todo.day           ?? null,
         _lastModified: todo._lastModified ?? now,
         _deviceId:     todo._deviceId     ?? deviceId,
     };
@@ -114,4 +116,29 @@ export function mergeAndSaveDeletedIds(remoteIds) {
     for (const id of (remoteIds ?? [])) combined.add(id);
     localStorage.setItem(DELETED_IDS_KEY, JSON.stringify([...combined]));
     return [...combined];
+}
+
+// ── Day tracking ──────────────────────────────────────────────────────────────
+// Tracks the last known day to detect when it's a new day, so notes can auto-move.
+
+function getDayKey(date = new Date()) {
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD
+}
+
+export function getLastKnownDay() {
+    return localStorage.getItem(LAST_DAY_KEY) || null;
+}
+
+export function setLastKnownDay(day) {
+    localStorage.setItem(LAST_DAY_KEY, day);
+}
+
+export function getCurrentDay() {
+    return getDayKey();
+}
+
+export function isNewDay() {
+    const last = getLastKnownDay();
+    const current = getCurrentDay();
+    return last !== current;
 }
