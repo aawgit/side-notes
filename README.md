@@ -71,6 +71,26 @@ This is where the magic happens. It manages the `groups` array in memory and syn
 - **`styles.css` (Root)**: Contains the full set of styles, including media queries for mobile devices (`max-width: 480px`). This is used by the Web App to ensure it looks good on phones.
 - **`firefox-extension/styles.css`**: Contains styles optimized specifically for the narrow context of a browser sidebar.
 
+### Versioning
+
+This project follows semantic versioning: `MAJOR.MINOR.PATCH`.
+
+- `PATCH`: bug fixes and small safe changes
+- `MINOR`: backward-compatible feature additions
+- `MAJOR`: breaking changes
+
+Update the version before shipping or committing a meaningful release. The current app version is defined in `firefox-extension/lib/version.js`, and the extension manifest/package version should stay aligned with it.
+
+Typical bump commands:
+
+```bash
+npm run version:patch
+# or
+npm run version:minor
+# or
+npm run version:major
+```
+
 ### Development Workflow
 
 1. **Modify Logic**: Edit `firefox-extension/sidebar.js`.

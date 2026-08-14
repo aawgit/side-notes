@@ -12,7 +12,10 @@
 <body>
 
 <div class="app-header">
-    <h1>Side notes</h1>
+    <div class="app-title-wrap">
+        <h1>Side notes</h1>
+        <span class="app-version">v0.1.0</span>
+    </div>
     <div class="sync-area">
         <button id="syncBtn" class="sync-btn" hidden>Sync</button>
         <button id="settingsBtn" class="icon-button settings-btn" title="Sync settings">⚙</button>
@@ -63,6 +66,10 @@
 
 <!-- App logic -->
 <script type="module" src="firefox-extension/sidebar.js"></script>
+<script type="module">
+    import { hydrateAppVersion } from './firefox-extension/lib/version.js';
+    hydrateAppVersion(document);
+</script>
 
 <!-- Sync settings UI (web app only) -->
 <script type="module">

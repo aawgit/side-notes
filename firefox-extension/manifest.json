@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Side Notes",
-  "version": "1.0",
+  "version": "0.1.0",
   "description": "A simple draggable todo list inside Firefox's sidebar.",
   "sidebar_action": {
     "default_title": "Side Notes",
