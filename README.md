@@ -81,3 +81,4 @@ This is where the magic happens. It manages the `groups` array in memory and syn
 3. **Testing**:
     - **Quick Loop**: Open `index.html` in a browser. This is the fastest way to test logic changes.
     - **Integration**: Reload the temporary add-on in Firefox to verify sidebar behavior.
+4. **Deployment**: This is served as a GitHub page. To deploy merge a PR to the main branch.

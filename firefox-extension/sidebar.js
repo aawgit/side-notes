@@ -1,4 +1,15 @@
-import { loadGroups, saveGroups, getDeviceId, trackDeletedId, getSyncMeta, setSyncMeta, isNewDay, setLastKnownDay, getCurrentDay } from './lib/store.js';
+import {
+    loadGroups,
+    saveGroups,
+    getDeviceId,
+    trackDeletedId,
+    getSyncMeta,
+    setSyncMeta,
+    isNewDay,
+    setLastKnownDay,
+    getCurrentDay,
+    movePastTodosToToday,
+} from './lib/store.js';
 import { performSync, initSync } from './lib/sync.js';
 import { handleOAuthCallback } from './lib/dropbox.js';
 
@@ -112,15 +123,21 @@ function setTodoDay(groupId, todoId, day) {
 
 function moveNotesFromOldDays() {
     const today = getCurrentDay();
+    let changed = false;
+
     groups.forEach(group => {
-        group.todos.forEach(todo => {
+        (group.todos || []).forEach(todo => {
             if (todo.day && todo.day < today) {
-                todo.day = null;
+                todo.day = today;
                 todo._lastModified = Date.now();
+                changed = true;
             }
         });
     });
-    save();
+
+    if (changed) {
+        save();
+    }
 }
 
 // ── Mutations ──────────────────────────────────────────────────────────────────
