@@ -10,6 +10,7 @@ import {
     getCurrentDay,
     movePastTodosToToday,
 } from './lib/store.js';
+import { hydrateAppVersion } from './lib/version.js';
 import { performSync, initSync } from './lib/sync.js';
 import { handleOAuthCallback } from './lib/dropbox.js';
 
@@ -564,6 +565,8 @@ window.addEventListener('sn:synced', (e) => {
 // ── Startup ────────────────────────────────────────────────────────────────────
 
 async function boot() {
+    hydrateAppVersion();
+
     // Check if it's a new day and move old notes
     if (isNewDay()) {
         moveNotesFromOldDays();
