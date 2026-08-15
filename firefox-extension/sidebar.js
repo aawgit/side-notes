@@ -11,7 +11,7 @@ import {
     movePastTodosToToday,
 } from './lib/store.js';
 import { hydrateAppVersion } from './lib/version.js';
-import { performSync, initSync } from './lib/sync.js';
+import { performSync, initSync, scheduleSyncAfterEdit } from './lib/sync.js';
 import { handleOAuthCallback } from './lib/dropbox.js';
 
 // ── State ──────────────────────────────────────────────────────────────────────
@@ -119,6 +119,7 @@ function setTodoDay(groupId, todoId, day) {
     todo.day = day;
     todo._lastModified = Date.now();
     save();
+    scheduleSyncAfterEdit();
     render();
 }
 
@@ -158,6 +159,7 @@ function addGroup() {
     });
     input.value = '';
     save();
+    scheduleSyncAfterEdit();
     render();
 }
 
@@ -174,6 +176,7 @@ function addTodo(groupId, text, day = null) {
         _deviceId:     getDeviceId(),
     });
     save();
+    scheduleSyncAfterEdit();
     render();
 }
 
@@ -193,6 +196,7 @@ function deleteTodo(groupId, todoId) {
     }
 
     save();
+    scheduleSyncAfterEdit();
     render();
 }
 
@@ -206,6 +210,7 @@ function moveTodo(groupId, todoId, direction) {
 
     [group.todos[ti], group.todos[ni]] = [group.todos[ni], group.todos[ti]];
     save();
+    scheduleSyncAfterEdit();
     render();
 }
 
@@ -247,6 +252,8 @@ function renderCurrentView() {
     container.innerHTML = '';
 
     groups.forEach((group) => {
+        // Skip hidden groups (starting with __)
+        if (group.title.startsWith('__')) return;
         const groupId = group.id;
 
         const g = document.createElement('div');
@@ -267,6 +274,7 @@ function renderCurrentView() {
         header.onclick = () => {
             group.collapsed = !group.collapsed;
             save();
+            scheduleSyncAfterEdit();
             render();
         };
         g.appendChild(header);
@@ -516,11 +524,12 @@ function renderWeekView() {
 function addTodoToDay(day, text) {
     if (!text.trim()) return;
 
-    let targetGroup = groups.find(g => g.title === 'Notes') || groups[0];
+    // Use a special hidden group for day-based notes so they don't appear in the "All" tab
+    let targetGroup = groups.find(g => g.title === '__Day Notes__');
     if (!targetGroup) {
         targetGroup = {
             id:            crypto.randomUUID(),
-            title:         'Notes',
+            title:         '__Day Notes__',
             todos:         [],
             collapsed:     false,
             _lastModified: Date.now(),
@@ -537,6 +546,7 @@ function addTodoToDay(day, text) {
         _deviceId:     getDeviceId(),
     });
     save();
+    scheduleSyncAfterEdit();
     render();
 }
 
