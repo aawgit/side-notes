@@ -19,6 +19,9 @@ import { handleOAuthCallback } from './lib/dropbox.js';
 let groups   = loadGroups();
 let dragging = null; // { groupId, todoId }
 let currentTab = 'current'; // 'current' or 'week'
+let pendingSyncedGroups = null;
+let activeDescriptionTarget = null; // { groupId, todoId }
+let activeDescriptionInitialValue = '';
 
 migrateLegacyDayGroups();
 
@@ -171,6 +174,7 @@ function addTodo(groupId, text, day = null) {
     group.todos.unshift({
         id:            crypto.randomUUID(),
         text,
+        description:   '',
         day,
         _lastModified: Date.now(),
         _deviceId:     getDeviceId(),
@@ -181,6 +185,14 @@ function addTodo(groupId, text, day = null) {
 }
 
 function deleteTodo(groupId, todoId) {
+    if (
+        activeDescriptionTarget &&
+        activeDescriptionTarget.groupId === groupId &&
+        activeDescriptionTarget.todoId === todoId
+    ) {
+        closeDescriptionEditor();
+    }
+
     const gi = groups.findIndex(g => g.id === groupId);
     if (gi === -1) return;
 
@@ -212,6 +224,133 @@ function moveTodo(groupId, todoId, direction) {
     save();
     scheduleSyncAfterEdit();
     render();
+}
+
+function getTodoRef(groupId, todoId) {
+    const group = groups.find(g => g.id === groupId);
+    if (!group) return null;
+    const todo = (group.todos || []).find(t => t.id === todoId);
+    if (!todo) return null;
+    return { group, todo };
+}
+
+function ensureDescriptionEditor() {
+    let backdrop = document.getElementById('descriptionEditorBackdrop');
+    if (backdrop) return backdrop;
+
+    backdrop = document.createElement('div');
+    backdrop.id = 'descriptionEditorBackdrop';
+    backdrop.className = 'description-editor-backdrop';
+
+    const panel = document.createElement('div');
+    panel.className = 'description-editor-panel';
+
+    const title = document.createElement('div');
+    title.id = 'descriptionEditorTitle';
+    title.className = 'description-editor-title';
+
+    const textarea = document.createElement('textarea');
+    textarea.id = 'descriptionEditorInput';
+    textarea.className = 'description-editor-input';
+    textarea.placeholder = 'Add note description...';
+    textarea.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeDescriptionEditor();
+        }
+    });
+
+    const actions = document.createElement('div');
+    actions.className = 'description-editor-actions';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'add';
+    closeBtn.textContent = 'Close';
+    closeBtn.addEventListener('click', () => closeDescriptionEditor());
+
+    const saveCloseBtn = document.createElement('button');
+    saveCloseBtn.id = 'descriptionEditorSaveCloseBtn';
+    saveCloseBtn.type = 'button';
+    saveCloseBtn.className = 'add';
+    saveCloseBtn.textContent = 'Save & Close';
+    saveCloseBtn.disabled = true;
+    saveCloseBtn.addEventListener('click', () => saveDescriptionAndClose());
+
+    textarea.addEventListener('input', () => {
+        updateDescriptionSaveButtonState();
+    });
+
+    actions.appendChild(closeBtn);
+    actions.appendChild(saveCloseBtn);
+
+    panel.appendChild(title);
+    panel.appendChild(textarea);
+    panel.appendChild(actions);
+    backdrop.appendChild(panel);
+    document.body.appendChild(backdrop);
+
+    return backdrop;
+}
+
+function updateDescriptionSaveButtonState() {
+    const textarea = document.getElementById('descriptionEditorInput');
+    const saveCloseBtn = document.getElementById('descriptionEditorSaveCloseBtn');
+    if (!textarea || !saveCloseBtn) return;
+    saveCloseBtn.disabled = textarea.value === activeDescriptionInitialValue;
+}
+
+function openDescriptionEditor(groupId, todoId) {
+    const todoRef = getTodoRef(groupId, todoId);
+    if (!todoRef) return;
+
+    activeDescriptionTarget = { groupId, todoId };
+    const backdrop = ensureDescriptionEditor();
+    const title = document.getElementById('descriptionEditorTitle');
+    const textarea = document.getElementById('descriptionEditorInput');
+    if (!title || !textarea) return;
+
+    title.textContent = todoRef.todo.text;
+    textarea.value = todoRef.todo.description || '';
+    activeDescriptionInitialValue = textarea.value;
+    backdrop.classList.add('is-open');
+    updateDescriptionSaveButtonState();
+
+    // Make the editor's text area the primary focus target.
+    textarea.focus();
+    const end = textarea.value.length;
+    textarea.setSelectionRange(end, end);
+}
+
+function closeDescriptionEditor() {
+    const backdrop = document.getElementById('descriptionEditorBackdrop');
+    if (backdrop) backdrop.classList.remove('is-open');
+    activeDescriptionTarget = null;
+    activeDescriptionInitialValue = '';
+}
+
+function saveDescriptionAndClose() {
+    if (!activeDescriptionTarget) return;
+
+    const textarea = document.getElementById('descriptionEditorInput');
+    if (!textarea) return;
+
+    const todoRef = getTodoRef(activeDescriptionTarget.groupId, activeDescriptionTarget.todoId);
+    if (!todoRef) {
+        closeDescriptionEditor();
+        return;
+    }
+
+    const nextDescription = textarea.value;
+    const currentDescription = todoRef.todo.description || '';
+
+    if (nextDescription !== currentDescription) {
+        todoRef.todo.description = nextDescription;
+        todoRef.todo._lastModified = Date.now();
+        save();
+        scheduleSyncAfterEdit();
+    }
+    closeDescriptionEditor();
 }
 
 // ── Render ─────────────────────────────────────────────────────────────────────
@@ -287,15 +426,24 @@ function renderCurrentView() {
             addInput.className = 'add-todo-input';
 
             const input = document.createElement('input');
+            input.dataset.draftKey = `group:${groupId}`;
             input.placeholder = 'Add todo...';
             input.addEventListener('keypress', e => {
-                if (e.key === 'Enter') { addTodo(groupId, input.value); input.value = ''; }
+                if (e.key === 'Enter') {
+                    const text = input.value;
+                    input.value = '';
+                    addTodo(groupId, text);
+                }
             });
 
             const btn = document.createElement('button');
             btn.className = 'add';
             btn.textContent = 'Add';
-            btn.onclick = () => { addTodo(groupId, input.value); input.value = ''; };
+            btn.onclick = () => {
+                const text = input.value;
+                input.value = '';
+                addTodo(groupId, text);
+            };
 
             addInput.appendChild(input);
             addInput.appendChild(btn);
@@ -354,6 +502,9 @@ function renderCurrentView() {
 
                 const wrapper = document.createElement('div');
                 wrapper.className = 'note-item';
+                wrapper.addEventListener('click', () => {
+                    openDescriptionEditor(groupId, todoId);
+                });
 
                 const textSpan = document.createElement('span');
                 textSpan.className   = 'note-text';
@@ -361,6 +512,9 @@ function renderCurrentView() {
 
                 const actions = document.createElement('div');
                 actions.className = 'note-actions';
+                actions.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
 
                 const upBtn = document.createElement('button');
                 upBtn.className   = 'icon-button up';
@@ -455,11 +609,13 @@ function renderWeekView() {
         addInput.className = 'add-todo-input';
 
         const input = document.createElement('input');
+        input.dataset.draftKey = `day:${day}`;
         input.placeholder = 'Add to this day...';
         input.addEventListener('keypress', e => {
             if (e.key === 'Enter') { 
-                addTodoToDay(day, input.value); 
-                input.value = ''; 
+                const text = input.value;
+                input.value = '';
+                addTodoToDay(day, text);
             }
         });
 
@@ -467,8 +623,9 @@ function renderWeekView() {
         btn.className = 'add';
         btn.textContent = 'Add';
         btn.onclick = () => { 
-            addTodoToDay(day, input.value); 
-            input.value = ''; 
+            const text = input.value;
+            input.value = '';
+            addTodoToDay(day, text);
         };
 
         addInput.appendChild(input);
@@ -478,6 +635,9 @@ function renderWeekView() {
         todos.forEach(todo => {
             const todoEl = document.createElement('div');
             todoEl.className = 'week-todo';
+            todoEl.addEventListener('click', () => {
+                openDescriptionEditor(todo.groupId, todo.id);
+            });
 
             const text = document.createElement('span');
             text.className = 'week-todo-text';
@@ -485,6 +645,9 @@ function renderWeekView() {
 
             const actions = document.createElement('div');
             actions.className = 'week-todo-actions';
+            actions.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
 
             const copyBtn = document.createElement('button');
             copyBtn.className = 'icon-button copy';
@@ -541,6 +704,7 @@ function addTodoToDay(day, text) {
     targetGroup.todos.unshift({
         id:            crypto.randomUUID(),
         text,
+        description:   '',
         day,
         _lastModified: Date.now(),
         _deviceId:     getDeviceId(),
@@ -550,13 +714,81 @@ function addTodoToDay(day, text) {
     render();
 }
 
+function getDraftKey(input) {
+    if (!input) return null;
+    if (input.id === 'newTitle') return 'newTitle';
+    return input.dataset.draftKey || null;
+}
+
+function captureDraftState() {
+    const values = new Map();
+    let focusedKey = null;
+    let selectionStart = null;
+    let selectionEnd = null;
+
+    document.querySelectorAll('input').forEach((input) => {
+        const key = getDraftKey(input);
+        if (!key) return;
+        values.set(key, input.value);
+
+        if (document.activeElement === input) {
+            focusedKey = key;
+            selectionStart = input.selectionStart;
+            selectionEnd = input.selectionEnd;
+        }
+    });
+
+    return { values, focusedKey, selectionStart, selectionEnd };
+}
+
+function restoreDraftState(state) {
+    if (!state) return;
+
+    document.querySelectorAll('input').forEach((input) => {
+        const key = getDraftKey(input);
+        if (!key || !state.values.has(key)) return;
+        input.value = state.values.get(key);
+
+        if (key === state.focusedKey) {
+            input.focus();
+            if (
+                Number.isInteger(state.selectionStart) &&
+                Number.isInteger(state.selectionEnd)
+            ) {
+                input.setSelectionRange(state.selectionStart, state.selectionEnd);
+            }
+        }
+    });
+}
+
+function applySyncedGroups(nextGroups) {
+    if (!Array.isArray(nextGroups)) return;
+    if (JSON.stringify(groups) === JSON.stringify(nextGroups)) return;
+    groups = nextGroups;
+
+    if (activeDescriptionTarget) {
+        const stillExists = getTodoRef(activeDescriptionTarget.groupId, activeDescriptionTarget.todoId);
+        if (!stillExists) closeDescriptionEditor();
+    }
+
+    render();
+}
+
+function isTypingIntoInput() {
+    const el = document.activeElement;
+    if (!el) return false;
+    return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA';
+}
+
 function render() {
+    const draftState = captureDraftState();
     renderTabNavigation();
     if (currentTab === 'current') {
         renderCurrentView();
     } else {
         renderWeekView();
     }
+    restoreDraftState(draftState);
 }
 
 // ── Event wiring ───────────────────────────────────────────────────────────────
@@ -568,8 +800,21 @@ document.getElementById('newTitle').addEventListener('keypress', e => {
 
 // Re-render when a sync cycle delivers a merged state.
 window.addEventListener('sn:synced', (e) => {
-    groups = e.detail.groups;
-    render();
+    const syncedGroups = e.detail?.groups;
+    if (isTypingIntoInput()) {
+        pendingSyncedGroups = syncedGroups;
+        return;
+    }
+
+    pendingSyncedGroups = null;
+    applySyncedGroups(syncedGroups);
+});
+
+window.addEventListener('focusin', () => {
+    if (!pendingSyncedGroups || isTypingIntoInput()) return;
+    const nextGroups = pendingSyncedGroups;
+    pendingSyncedGroups = null;
+    applySyncedGroups(nextGroups);
 });
 
 // ── Startup ────────────────────────────────────────────────────────────────────
