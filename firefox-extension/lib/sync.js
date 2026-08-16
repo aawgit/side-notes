@@ -102,10 +102,13 @@ export async function performSync() {
         const local = loadGroups();
 
         let finalGroups = local;
+        let uiNeedsRefresh = false;
         if (remote?.groups) {
             const deletedIds = mergeAndSaveDeletedIds(remote.deletedIds ?? []);
             finalGroups = mergeGroups(local, remote.groups, deletedIds);
             saveGroups(finalGroups);
+            // Only ask the UI to re-render when the merged snapshot changed.
+            uiNeedsRefresh = JSON.stringify(finalGroups) !== JSON.stringify(local);
         }
 
         await pushRemote(token, {
@@ -118,8 +121,10 @@ export async function performSync() {
         setSyncMeta({ lastSync: Date.now() });
         emit(Status.OK, Date.now());
 
-        // Notify the UI layer so it can re-render with the merged state.
-        window.dispatchEvent(new CustomEvent('sn:synced', { detail: { groups: finalGroups } }));
+        if (uiNeedsRefresh) {
+            // Notify the UI layer only when sync actually changed local data.
+            window.dispatchEvent(new CustomEvent('sn:synced', { detail: { groups: finalGroups } }));
+        }
     } catch (err) {
         console.error('[sn:sync]', err);
         if (err.code === 401 || err.code === 'reauth') {

@@ -19,6 +19,7 @@ import { handleOAuthCallback } from './lib/dropbox.js';
 let groups   = loadGroups();
 let dragging = null; // { groupId, todoId }
 let currentTab = 'current'; // 'current' or 'week'
+let pendingSyncedGroups = null;
 
 migrateLegacyDayGroups();
 
@@ -287,15 +288,24 @@ function renderCurrentView() {
             addInput.className = 'add-todo-input';
 
             const input = document.createElement('input');
+            input.dataset.draftKey = `group:${groupId}`;
             input.placeholder = 'Add todo...';
             input.addEventListener('keypress', e => {
-                if (e.key === 'Enter') { addTodo(groupId, input.value); input.value = ''; }
+                if (e.key === 'Enter') {
+                    const text = input.value;
+                    input.value = '';
+                    addTodo(groupId, text);
+                }
             });
 
             const btn = document.createElement('button');
             btn.className = 'add';
             btn.textContent = 'Add';
-            btn.onclick = () => { addTodo(groupId, input.value); input.value = ''; };
+            btn.onclick = () => {
+                const text = input.value;
+                input.value = '';
+                addTodo(groupId, text);
+            };
 
             addInput.appendChild(input);
             addInput.appendChild(btn);
@@ -455,11 +465,13 @@ function renderWeekView() {
         addInput.className = 'add-todo-input';
 
         const input = document.createElement('input');
+        input.dataset.draftKey = `day:${day}`;
         input.placeholder = 'Add to this day...';
         input.addEventListener('keypress', e => {
             if (e.key === 'Enter') { 
-                addTodoToDay(day, input.value); 
-                input.value = ''; 
+                const text = input.value;
+                input.value = '';
+                addTodoToDay(day, text);
             }
         });
 
@@ -467,8 +479,9 @@ function renderWeekView() {
         btn.className = 'add';
         btn.textContent = 'Add';
         btn.onclick = () => { 
-            addTodoToDay(day, input.value); 
-            input.value = ''; 
+            const text = input.value;
+            input.value = '';
+            addTodoToDay(day, text);
         };
 
         addInput.appendChild(input);
@@ -550,13 +563,75 @@ function addTodoToDay(day, text) {
     render();
 }
 
+function getDraftKey(input) {
+    if (!input) return null;
+    if (input.id === 'newTitle') return 'newTitle';
+    return input.dataset.draftKey || null;
+}
+
+function captureDraftState() {
+    const values = new Map();
+    let focusedKey = null;
+    let selectionStart = null;
+    let selectionEnd = null;
+
+    document.querySelectorAll('input').forEach((input) => {
+        const key = getDraftKey(input);
+        if (!key) return;
+        values.set(key, input.value);
+
+        if (document.activeElement === input) {
+            focusedKey = key;
+            selectionStart = input.selectionStart;
+            selectionEnd = input.selectionEnd;
+        }
+    });
+
+    return { values, focusedKey, selectionStart, selectionEnd };
+}
+
+function restoreDraftState(state) {
+    if (!state) return;
+
+    document.querySelectorAll('input').forEach((input) => {
+        const key = getDraftKey(input);
+        if (!key || !state.values.has(key)) return;
+        input.value = state.values.get(key);
+
+        if (key === state.focusedKey) {
+            input.focus();
+            if (
+                Number.isInteger(state.selectionStart) &&
+                Number.isInteger(state.selectionEnd)
+            ) {
+                input.setSelectionRange(state.selectionStart, state.selectionEnd);
+            }
+        }
+    });
+}
+
+function applySyncedGroups(nextGroups) {
+    if (!Array.isArray(nextGroups)) return;
+    if (JSON.stringify(groups) === JSON.stringify(nextGroups)) return;
+    groups = nextGroups;
+    render();
+}
+
+function isTypingIntoInput() {
+    const el = document.activeElement;
+    if (!el) return false;
+    return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA';
+}
+
 function render() {
+    const draftState = captureDraftState();
     renderTabNavigation();
     if (currentTab === 'current') {
         renderCurrentView();
     } else {
         renderWeekView();
     }
+    restoreDraftState(draftState);
 }
 
 // ── Event wiring ───────────────────────────────────────────────────────────────
@@ -568,8 +643,21 @@ document.getElementById('newTitle').addEventListener('keypress', e => {
 
 // Re-render when a sync cycle delivers a merged state.
 window.addEventListener('sn:synced', (e) => {
-    groups = e.detail.groups;
-    render();
+    const syncedGroups = e.detail?.groups;
+    if (isTypingIntoInput()) {
+        pendingSyncedGroups = syncedGroups;
+        return;
+    }
+
+    pendingSyncedGroups = null;
+    applySyncedGroups(syncedGroups);
+});
+
+window.addEventListener('focusin', () => {
+    if (!pendingSyncedGroups || isTypingIntoInput()) return;
+    const nextGroups = pendingSyncedGroups;
+    pendingSyncedGroups = null;
+    applySyncedGroups(nextGroups);
 });
 
 // ── Startup ────────────────────────────────────────────────────────────────────
