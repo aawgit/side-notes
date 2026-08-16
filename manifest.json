@@ -4,8 +4,8 @@
     "description": "Minimal, syncing todo list for laptop and phone",
     "start_url": "./",
     "display": "standalone",
-    "background_color": "#121212",
-    "theme_color": "#121212",
+    "background_color": "#080808",
+    "theme_color": "#080808",
     "icons": [
         {
             "src": "./firefox-extension/icons/favicon-48x48.png",
