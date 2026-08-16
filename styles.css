@@ -30,7 +30,7 @@ body {
     font-family: 'Fragment Mono', monospace, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     background-color: var(--bg);
     color: var(--text);
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
 }
@@ -66,14 +66,14 @@ a:hover {
 
 h1 {
     margin: 0;
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     font-weight: 400;
     color: var(--accent);
     letter-spacing: -0.01em;
 }
 
 .app-version {
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--mid);
@@ -97,7 +97,7 @@ h1 {
     background: transparent;
     color: var(--mid);
     font-family: 'Fragment Mono', monospace;
-    font-size: 11px;
+    font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     cursor: pointer;
@@ -137,7 +137,7 @@ h1 {
 }
 
 .settings-btn {
-    font-size: 14px;
+    font-size: 16px;
     padding: 4px 8px;
     color: var(--mid);
     background: transparent;
@@ -164,7 +164,7 @@ h1 {
 
 .settings-panel h2 {
     margin: 0 0 14px 0;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -172,7 +172,7 @@ h1 {
 }
 
 .settings-help {
-    font-size: 13px;
+    font-size: 15px;
     color: var(--text);
     margin: 0 0 16px 0;
     line-height: 1.7;
@@ -180,7 +180,7 @@ h1 {
 
 .settings-panel label {
     display: block;
-    font-size: 10px;
+    font-size: 12px;
     color: var(--mid);
     margin-bottom: 6px;
     text-transform: uppercase;
@@ -189,7 +189,7 @@ h1 {
 
 .settings-error {
     color: #ff6b6b;
-    font-size: 12px;
+    font-size: 14px;
     margin: 10px 0 0;
 }
 
@@ -197,7 +197,7 @@ h1 {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 13px;
+    font-size: 15px;
     color: var(--text);
     margin-bottom: 8px;
 }
@@ -212,7 +212,7 @@ h1 {
 }
 
 .last-sync-text {
-    font-size: 11px;
+    font-size: 13px;
     color: var(--mid);
     margin: 0 0 16px;
 }
@@ -230,7 +230,7 @@ h1 {
     background: transparent;
     color: #e57373;
     font-family: 'Fragment Mono', monospace;
-    font-size: 12px;
+    font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     cursor: pointer;
@@ -263,7 +263,7 @@ h1 {
     align-items: center;
     cursor: pointer;
     font-weight: 500;
-    font-size: 12px;
+    font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--accent);
@@ -271,7 +271,7 @@ h1 {
 }
 
 .group-header span {
-    font-size: 10px;
+    font-size: 12px;
     color: var(--mid);
     transition: color 0.15s;
 }
@@ -310,7 +310,7 @@ h1 {
     flex: 1 1 auto;
     min-width: 0;
     color: var(--text);
-    font-size: 13px;
+    font-size: 15px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -329,7 +329,7 @@ h1 {
     background: transparent;
     border: 1px solid transparent;
     color: var(--mid);
-    font-size: 13px;
+    font-size: 15px;
     padding: 4px 6px;
     cursor: pointer;
     transition: all 0.15s var(--ease-out);
@@ -374,7 +374,7 @@ input {
     background: var(--input-bg);
     color: var(--accent);
     font-family: 'Fragment Mono', monospace;
-    font-size: 13px;
+    font-size: 15px;
     transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
 }
 
@@ -396,7 +396,7 @@ button.add {
     color: #080808;
     font-family: 'Fragment Mono', monospace;
     font-weight: 600;
-    font-size: 11px;
+    font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     cursor: pointer;
@@ -427,7 +427,7 @@ button.add:hover {
     background: transparent;
     color: var(--mid);
     font-family: 'Fragment Mono', monospace;
-    font-size: 11px;
+    font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     cursor: pointer;
@@ -453,7 +453,7 @@ button.add:hover {
     background: #0d0d0d;
     color: var(--mid);
     font-family: 'Fragment Mono', monospace;
-    font-size: 11px;
+    font-size: 13px;
     cursor: pointer;
     outline: none;
     transition: all 0.15s var(--ease-out);
@@ -500,7 +500,7 @@ button.add:hover {
 
 .day-header {
     font-weight: 500;
-    font-size: 11px;
+    font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--accent);
@@ -532,12 +532,12 @@ button.add:hover {
     min-width: 0;
     width: 0;
     padding: 8px 10px;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .day-todos .add-todo-input button.add {
     padding: 8px 12px;
-    font-size: 10px;
+    font-size: 12px;
     flex-shrink: 0;
 }
 
@@ -550,7 +550,7 @@ button.add:hover {
     border-radius: 6px;
     padding: 8px 12px;
     gap: 8px;
-    font-size: 13px;
+    font-size: 15px;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
@@ -587,15 +587,15 @@ button.add:hover {
         margin-bottom: 6px;
     }
     .note-text {
-        font-size: 13px;
+        font-size: 15px;
     }
     .icon-button {
-        font-size: 14px;
+        font-size: 16px;
         padding: 4px 6px;
     }
     .day-select {
         max-width: 105px;
-        font-size: 10px;
+        font-size: 12px;
         padding: 3px 4px;
     }
     .week-view {
