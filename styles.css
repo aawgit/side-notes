@@ -15,14 +15,18 @@
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-*, *::before, *::after {
-    box-sizing: border-box;
+html {
+    overflow-x: hidden;
+    width: 100%;
 }
 
 body {
     margin: 0 auto;
     padding: 28px 24px;
     max-width: 1200px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
     font-family: 'Fragment Mono', monospace, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     background-color: var(--bg);
     color: var(--text);
@@ -355,11 +359,15 @@ h1 {
     margin-bottom: 14px;
     gap: 10px;
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 input {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-width: 0;
+    width: 0;
+    box-sizing: border-box;
     padding: 10px 14px;
     border-radius: 6px;
     border: 1px solid var(--line);
@@ -393,29 +401,12 @@ button.add {
     letter-spacing: 0.06em;
     cursor: pointer;
     transition: all 0.2s var(--ease-out);
+    flex-shrink: 0;
 }
 
 button.add:hover {
     background: var(--highlight);
     border-color: var(--highlight);
-}
-
-/* ── Mobile Tweaks ── */
-@media (max-width: 480px) {
-    body {
-        padding: 16px 14px;
-    }
-    .note-item {
-        padding: 6px 8px;
-        margin-bottom: 6px;
-    }
-    .note-text {
-        font-size: 13px;
-    }
-    .icon-button {
-        font-size: 15px;
-        padding: 6px 8px;
-    }
 }
 
 /* ── Tab Navigation ── */
@@ -425,6 +416,9 @@ button.add:hover {
     margin-bottom: 24px;
     border-bottom: 1px solid var(--line);
     padding-bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .tab-button {
@@ -479,9 +473,12 @@ button.add:hover {
 /* ── Week View ── */
 .week-view {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 16px;
     margin-top: 20px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .day-card {
@@ -489,6 +486,10 @@ button.add:hover {
     border: 1px solid var(--line);
     border-radius: 8px;
     padding: 16px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
     transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
 }
 
@@ -512,15 +513,24 @@ button.add:hover {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .day-todos .add-todo-input {
     margin-top: 4px;
     margin-bottom: 10px;
     gap: 6px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .day-todos .add-todo-input input {
+    flex: 1 1 0;
+    min-width: 0;
+    width: 0;
     padding: 8px 10px;
     font-size: 12px;
 }
@@ -541,15 +551,20 @@ button.add:hover {
     padding: 8px 12px;
     gap: 8px;
     font-size: 13px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .week-todo-text {
-    flex: 1;
+    flex: 1 1 0;
     color: var(--text);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     min-width: 0;
+    width: 0;
 }
 
 .week-todo-actions {
@@ -558,8 +573,40 @@ button.add:hover {
     flex: 0 0 auto;
 }
 
+/* ── Mobile & Responsive Rules ── */
 @media (max-width: 768px) {
+    body {
+        padding: 16px 12px;
+    }
+    .add-title,
+    .add-todo-input {
+        gap: 6px;
+    }
+    .note-item {
+        padding: 6px 8px;
+        margin-bottom: 6px;
+    }
+    .note-text {
+        font-size: 13px;
+    }
+    .icon-button {
+        font-size: 14px;
+        padding: 4px 6px;
+    }
+    .day-select {
+        max-width: 105px;
+        font-size: 10px;
+        padding: 3px 4px;
+    }
     .week-view {
         grid-template-columns: 1fr;
+        gap: 12px;
+        width: 100%;
+        max-width: 100%;
+    }
+    .day-card {
+        padding: 12px 10px;
+        width: 100%;
+        max-width: 100%;
     }
 }
