@@ -27,6 +27,7 @@ function migrateTodo(todo, deviceId, now) {
     return {
         id:            todo.id            ?? crypto.randomUUID(),
         text:          todo.text,
+        description:   todo.description   ?? '',
         day:           todo.day           ?? null,
         _lastModified: todo._lastModified ?? now,
         _deviceId:     todo._deviceId     ?? deviceId,

@@ -555,6 +555,7 @@ button.add:hover {
     max-width: 100%;
     box-sizing: border-box;
     overflow: hidden;
+    cursor: grab;
 }
 
 .week-todo-text {
@@ -565,12 +566,89 @@ button.add:hover {
     white-space: nowrap;
     min-width: 0;
     width: 0;
+    cursor: inherit;
 }
 
 .week-todo-actions {
     display: flex;
     gap: 4px;
     flex: 0 0 auto;
+}
+
+/* ── Description Editor ── */
+.description-editor-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(6, 6, 6, 0.78);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    padding: 16px;
+}
+
+.description-editor-backdrop.is-open {
+    display: flex;
+}
+
+.description-editor-panel {
+    width: min(780px, 100%);
+    max-width: 100%;
+    max-height: 86vh;
+    background: #0b0b0b;
+    border: 1px solid var(--line-hover);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.description-editor-title {
+    color: var(--accent);
+    font-size: 14px;
+    letter-spacing: 0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.description-editor-input {
+    width: 100%;
+    max-width: 100%;
+    min-height: 230px;
+    max-height: calc(86vh - 120px);
+    resize: vertical;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--accent);
+    font-family: 'Fragment Mono', monospace;
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 10px 12px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.description-editor-input:focus {
+    border-color: #383838;
+    background: #111111;
+}
+
+.description-editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.description-editor-actions .add:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    border-color: #5b5b5b;
+    background: #8d8d8d;
 }
 
 /* ── Mobile & Responsive Rules ── */
@@ -608,5 +686,18 @@ button.add:hover {
         padding: 12px 10px;
         width: 100%;
         max-width: 100%;
+    }
+    .description-editor-backdrop {
+        padding: 10px;
+    }
+    .description-editor-panel {
+        width: 100%;
+        padding: 10px;
+        gap: 8px;
+    }
+    .description-editor-input {
+        min-height: 180px;
+        font-size: 14px;
+        padding: 8px 10px;
     }
 }
