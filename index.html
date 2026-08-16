@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="styles.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#121212">
-<link rel="icon" type="image/x-icon" href="firefox-extension/icons/favicon.png">
+<link rel="icon" type="image/png" href="firefox-extension/icons/favicon-32x32.png">
 <link rel="manifest" href="manifest.json">
 </head>
 <body>
@@ -60,7 +60,7 @@
 <!-- Register service worker for PWA offline support -->
 <script>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(() => {});
     }
 </script>
 
