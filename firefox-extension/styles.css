@@ -1,33 +1,55 @@
-/* ---- side-notes: modern card-style minimal dark theme ---- */
+/* ---- side-notes: dany.works inspired ultra-clean monospace dark theme (Firefox Extension) ---- */
+@import url('https://fonts.googleapis.com/css2?family=Fragment+Mono&display=swap');
+
+:root {
+    --bg: #080808;
+    --text: #b4b4b4;
+    --mid: #555555;
+    --line: #1c1c1c;
+    --line-hover: #2e2e2e;
+    --card-bg: #0d0d0d;
+    --card-hover: #121212;
+    --input-bg: #0d0d0d;
+    --accent: #e0e0e0;
+    --highlight: #ffffff;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 
 body {
     margin: 0;
     padding: 16px;
-    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    background-color: #121212;
-    color: #ececec;
-    font-size: 15px;
+    font-family: 'Fragment Mono', monospace, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    background-color: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
 }
 
 h1 {
-    margin-bottom: 16px;
-    font-size: 1.4em;
+    margin: 0 0 16px 0;
+    font-size: 1.2rem;
     font-weight: 400;
-    color: #e0e0e0;
+    color: var(--accent);
+    letter-spacing: -0.01em;
 }
 
 .group {
-    background: #1e1e1e;
-    border: 1px solid #2c2c2c;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
     border-radius: 8px;
-    padding: 12px 14px;
-    margin-bottom: 18px;
-    transition: border-color 0.2s, background 0.2s;
+    padding: 14px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
 }
 
 .group:hover {
-    border-color: #3a3a3a;
-    background: #232323;
+    border-color: var(--line-hover);
+    background: var(--card-hover);
 }
 
 .group-header {
@@ -36,41 +58,50 @@ h1 {
     align-items: center;
     cursor: pointer;
     font-weight: 500;
-    font-size: 1.05em;
-    color: #ddd;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    user-select: none;
+}
+
+.group-header span {
+    font-size: 10px;
+    color: var(--mid);
 }
 
 .todo-list {
-    margin-top: 10px;
+    margin-top: 12px;
 }
-
-/* ============================================================
-   FIXED LAYOUT → MATCHES YOUR ACTUAL HTML (note-item, note-text, note-actions)
-   ============================================================ */
 
 /* Container of each todo item */
 .note-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #151515;
-    border: 1px solid #2a2a2a;
+    background: #090909;
+    border: 1px solid #181818;
     border-radius: 6px;
     padding: 8px 10px;
     margin-bottom: 6px;
     cursor: grab;
     user-select: none;
-
-    /* prevent wrapping into a new line */
     white-space: nowrap;
     overflow: hidden;
+    transition: border-color 0.15s var(--ease-out), background 0.15s var(--ease-out);
+}
+
+.note-item:hover {
+    border-color: #282828;
+    background: #0f0f0f;
 }
 
 /* Todo text */
 .note-text {
     flex: 1 1 auto;
-    min-width: 0;   /* CRITICAL — prevents text from pushing buttons down */
-    color: #e8e8e8;
+    min-width: 0;
+    color: var(--text);
+    font-size: 13px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -79,70 +110,211 @@ h1 {
 /* Controls container */
 .note-actions {
     display: flex;
-    gap: 6px;
-    flex: 0 0 auto;       /* NEVER shrink */
+    gap: 4px;
+    flex: 0 0 auto;
     align-items: center;
     justify-content: flex-end;
 }
 
 /* Buttons */
 .icon-button {
-    background: none;
-    border: none;
-    color: #aaa;
-    font-size: 14px;
-    padding: 6px 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--mid);
+    font-size: 13px;
+    padding: 4px 6px;
     cursor: pointer;
-    transition: color 0.15s;
+    transition: all 0.15s var(--ease-out);
     border-radius: 4px;
-
-    /* prevent long-press from selecting text on mobile */
     -webkit-user-select: none;
     user-select: none;
+    line-height: 1;
 }
 
 .icon-button:hover {
-    color: #fff;
+    color: var(--highlight);
+    background: #1a1a1a;
+    border-color: #2a2a2a;
 }
 
 .icon-button.delete:hover {
-    color: #ff6666;
+    color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.08);
+    border-color: rgba(255, 107, 107, 0.2);
 }
 
 /* Input + add buttons */
 .add-title,
 .add-todo-input {
     display: flex;
-    margin-top: 14px;
-    margin-bottom: 14px;
-    gap: 10px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    gap: 8px;
+    width: 100%;
 }
 
 input {
-    flex: 1;
-    padding: 8px 10px;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 8px 12px;
     border-radius: 6px;
-    border: 1px solid #2c2c2c;
-    background: #1a1a1a;
-    color: #e8e8e8;
-    font-size: 14px;
+    border: 1px solid var(--line);
+    background: var(--input-bg);
+    color: var(--accent);
+    font-family: 'Fragment Mono', monospace;
+    font-size: 12px;
+    transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
 }
 
 input::placeholder {
-    color: #777;
+    color: #404040;
+}
+
+input:focus {
+    outline: none;
+    border-color: #383838;
+    background: #111111;
 }
 
 button.add {
-    padding: 8px 12px;
+    padding: 8px 14px;
     border-radius: 6px;
-    border: none;
-    background: #3b6df2;
-    color: white;
-    font-size: 14px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #080808;
+    font-family: 'Fragment Mono', monospace;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s var(--ease-out);
 }
 
 button.add:hover {
-    background: #5a85ff;
+    background: var(--highlight);
+    border-color: var(--highlight);
+}
+
+/* Tab Navigation */
+.tab-navigation {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 0;
+}
+
+.tab-button {
+    padding: 6px 4px 10px 4px;
+    border: none;
+    background: transparent;
+    color: var(--mid);
+    font-family: 'Fragment Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.2s var(--ease-out);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+}
+
+.tab-button:hover {
+    color: var(--text);
+}
+
+.tab-button.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+/* Day Select Dropdown */
+.day-select {
+    padding: 3px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    background: #0d0d0d;
+    color: var(--mid);
+    font-family: 'Fragment Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.15s var(--ease-out);
+}
+
+.day-select:hover {
+    color: var(--text);
+    border-color: var(--line-hover);
+}
+
+.day-select:focus {
+    color: var(--accent);
+    border-color: #383838;
+    background: #121212;
+}
+
+/* Week View */
+.week-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.day-card {
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px;
+    transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+}
+
+.day-card:hover {
+    border-color: var(--line-hover);
+    background: var(--card-hover);
+}
+
+.day-header {
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+}
+
+.day-todos {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.week-todo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #090909;
+    border: 1px solid #181818;
+    border-radius: 6px;
+    padding: 6px 10px;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.week-todo-text {
+    flex: 1;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.week-todo-actions {
+    display: flex;
+    gap: 4px;
+    flex: 0 0 auto;
 }

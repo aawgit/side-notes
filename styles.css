@@ -1,12 +1,47 @@
-/* ---- side-notes: modern card-style minimal dark theme ---- */
+/* ---- side-notes: dany.works inspired ultra-clean monospace dark theme ---- */
+@import url('https://fonts.googleapis.com/css2?family=Fragment+Mono&display=swap');
+
+:root {
+    --bg: #080808;
+    --text: #b4b4b4;
+    --mid: #555555;
+    --line: #1c1c1c;
+    --line-hover: #2e2e2e;
+    --card-bg: #0d0d0d;
+    --card-hover: #121212;
+    --input-bg: #0d0d0d;
+    --accent: #e0e0e0;
+    --highlight: #ffffff;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 
 body {
-    margin: 0;
-    padding: 16px;
-    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    background-color: #121212;
-    color: #ececec;
-    font-size: 15px;
+    margin: 0 auto;
+    padding: 28px 24px;
+    max-width: 1200px;
+    font-family: 'Fragment Mono', monospace, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    background-color: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Links ── */
+a {
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: #303030;
+    transition: color 0.2s var(--ease-out), text-decoration-color 0.2s var(--ease-out);
+}
+a:hover {
+    color: var(--highlight);
+    text-decoration-color: var(--mid);
 }
 
 /* ── App header row (title + sync area) ── */
@@ -14,54 +49,62 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
 }
 
 .app-title-wrap {
     display: flex;
     align-items: baseline;
-    gap: 8px;
+    gap: 10px;
 }
 
 h1 {
     margin: 0;
-    font-size: 1.4em;
+    font-size: 1.3rem;
     font-weight: 400;
-    color: #e0e0e0;
+    color: var(--accent);
+    letter-spacing: -0.01em;
 }
 
 .app-version {
     font-size: 10px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #7a7a7a;
-    opacity: 0.9;
+    color: var(--mid);
+    border: 1px solid var(--line);
+    padding: 2px 6px;
+    border-radius: 4px;
 }
 
 .sync-area {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
     flex-shrink: 0;
 }
 
 /* Sync button in the header */
 .sync-btn {
-    padding: 4px 12px;
-    border-radius: 12px;
-    border: 1px solid #333;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
     background: transparent;
-    color: #888;
-    font-size: 12px;
-    font-weight: 500;
+    color: var(--mid);
+    font-family: 'Fragment Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
     cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
+    transition: all 0.2s var(--ease-out);
     white-space: nowrap;
 }
 
 .sync-btn:hover:not(:disabled) {
-    border-color: #555;
-    color: #ccc;
+    border-color: var(--line-hover);
+    color: var(--text);
+    background: var(--card-bg);
 }
 
 .sync-btn:disabled {
@@ -70,16 +113,18 @@ h1 {
 
 .sync-btn.syncing {
     animation: sn-pulse 1.2s ease-in-out infinite;
+    border-color: #383838;
+    color: var(--accent);
 }
 
 .sync-btn.ok {
     color: #4caf50;
-    border-color: #1e3d1e;
+    border-color: #1c351c;
 }
 
 .sync-btn.error {
     color: #ff9800;
-    border-color: #3d2500;
+    border-color: #3b2800;
 }
 
 @keyframes sn-pulse {
@@ -88,77 +133,84 @@ h1 {
 }
 
 .settings-btn {
-    font-size: 15px;
-    padding: 4px 6px;
-    opacity: 0.6;
+    font-size: 14px;
+    padding: 4px 8px;
+    color: var(--mid);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s var(--ease-out);
 }
-.settings-btn:hover { opacity: 1; }
+.settings-btn:hover {
+    color: var(--highlight);
+    border-color: var(--line);
+    background: var(--card-bg);
+}
 
 /* ── Settings / sync panel ── */
 .settings-panel {
-    background: #1a1a1a;
-    border: 1px solid #2c2c2c;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
     border-radius: 8px;
-    padding: 16px 18px;
-    margin-bottom: 18px;
+    padding: 20px;
+    margin-bottom: 24px;
+    transition: border-color 0.2s var(--ease-out);
 }
 
 .settings-panel h2 {
     margin: 0 0 14px 0;
-    font-size: 1em;
+    font-size: 11px;
     font-weight: 500;
-    color: #ddd;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mid);
 }
 
 .settings-help {
     font-size: 13px;
-    color: #888;
-    margin: 0 0 14px 0;
-    line-height: 1.6;
+    color: var(--text);
+    margin: 0 0 16px 0;
+    line-height: 1.7;
 }
-
-.settings-help a {
-    color: #3b6df2;
-    text-decoration: none;
-}
-.settings-help a:hover { text-decoration: underline; }
 
 .settings-panel label {
     display: block;
-    font-size: 12px;
-    color: #aaa;
-    margin-bottom: 5px;
+    font-size: 10px;
+    color: var(--mid);
+    margin-bottom: 6px;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.08em;
 }
 
 .settings-error {
-    color: #ff6666;
-    font-size: 13px;
-    margin: 8px 0 0;
+    color: #ff6b6b;
+    font-size: 12px;
+    margin: 10px 0 0;
 }
 
 .connected-status {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 14px;
-    color: #ccc;
-    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 8px;
 }
 
 .status-dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: #4caf50;
     flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(76, 175, 80, 0.4);
 }
 
 .last-sync-text {
-    font-size: 12px;
-    color: #666;
-    margin: 0 0 14px;
+    font-size: 11px;
+    color: var(--mid);
+    margin: 0 0 16px;
 }
 
 .settings-actions {
@@ -168,32 +220,37 @@ h1 {
 }
 
 .btn-danger {
-    padding: 8px 12px;
+    padding: 8px 14px;
     border-radius: 6px;
-    border: 1px solid #c0392b;
+    border: 1px solid #3b1818;
     background: transparent;
     color: #e57373;
-    font-size: 14px;
+    font-family: 'Fragment Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    transition: all 0.2s var(--ease-out);
 }
 .btn-danger:hover {
-    background: #c0392b;
-    color: #fff;
+    background: #2d1212;
+    border-color: #5c2424;
+    color: #ff8a8a;
 }
 
+/* ── Group cards ── */
 .group {
-    background: #1e1e1e;
-    border: 1px solid #2c2c2c;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
     border-radius: 8px;
-    padding: 12px 14px;
-    margin-bottom: 18px;
-    transition: border-color 0.2s, background 0.2s;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
 }
 
 .group:hover {
-    border-color: #3a3a3a;
-    background: #232323;
+    border-color: var(--line-hover);
+    background: var(--card-hover);
 }
 
 .group-header {
@@ -202,219 +259,253 @@ h1 {
     align-items: center;
     cursor: pointer;
     font-weight: 500;
-    font-size: 1.05em;
-    color: #ddd;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    user-select: none;
+}
+
+.group-header span {
+    font-size: 10px;
+    color: var(--mid);
+    transition: color 0.15s;
+}
+
+.group-header:hover span {
+    color: var(--text);
 }
 
 .todo-list {
-    margin-top: 10px;
+    margin-top: 14px;
 }
 
-/* ============================================================
-   FIXED LAYOUT → MATCHES YOUR ACTUAL HTML (note-item, note-text, note-actions)
-   ============================================================ */
-
-/* Container of each todo item */
+/* ── Note / Todo items ── */
 .note-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #151515;
-    border: 1px solid #2a2a2a;
+    background: #090909;
+    border: 1px solid #181818;
     border-radius: 6px;
-    padding: 8px 10px;
-    margin-bottom: 6px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
     cursor: grab;
     user-select: none;
-
-    /* prevent wrapping into a new line */
     white-space: nowrap;
     overflow: hidden;
+    transition: border-color 0.15s var(--ease-out), background 0.15s var(--ease-out);
 }
 
-/* Todo text */
+.note-item:hover {
+    border-color: #282828;
+    background: #0f0f0f;
+}
+
 .note-text {
     flex: 1 1 auto;
-    min-width: 0;   /* CRITICAL — prevents text from pushing buttons down */
-    color: #e8e8e8;
+    min-width: 0;
+    color: var(--text);
+    font-size: 13px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-/* Controls container */
 .note-actions {
     display: flex;
-    gap: 6px;
-    flex: 0 0 auto;       /* NEVER shrink */
+    gap: 4px;
+    flex: 0 0 auto;
     align-items: center;
     justify-content: flex-end;
 }
 
-/* Buttons */
+/* Controls / Icon Buttons */
 .icon-button {
-    background: none;
-    border: none;
-    color: #aaa;
-    font-size: 14px;
-    padding: 6px 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--mid);
+    font-size: 13px;
+    padding: 4px 6px;
     cursor: pointer;
-    transition: color 0.15s;
+    transition: all 0.15s var(--ease-out);
     border-radius: 4px;
-
-    /* prevent long-press from selecting text on mobile */
     -webkit-user-select: none;
     user-select: none;
+    line-height: 1;
 }
 
 .icon-button:hover {
-    color: #fff;
+    color: var(--highlight);
+    background: #1a1a1a;
+    border-color: #2a2a2a;
 }
 
 .icon-button.delete:hover {
-    color: #ff6666;
+    color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.08);
+    border-color: rgba(255, 107, 107, 0.2);
 }
 
-/* Input + add buttons */
+/* Inputs & Add Controls */
 .add-title,
 .add-todo-input {
     display: flex;
     margin-top: 14px;
     margin-bottom: 14px;
     gap: 10px;
+    width: 100%;
 }
 
 input {
-    flex: 1;
-    padding: 8px 10px;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 10px 14px;
     border-radius: 6px;
-    border: 1px solid #2c2c2c;
-    background: #1a1a1a;
-    color: #e8e8e8;
-    font-size: 14px;
+    border: 1px solid var(--line);
+    background: var(--input-bg);
+    color: var(--accent);
+    font-family: 'Fragment Mono', monospace;
+    font-size: 13px;
+    transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
 }
 
 input::placeholder {
-    color: #777;
+    color: #404040;
+}
+
+input:focus {
+    outline: none;
+    border-color: #383838;
+    background: #111111;
 }
 
 button.add {
-    padding: 8px 12px;
+    padding: 10px 16px;
     border-radius: 6px;
-    border: none;
-    background: #3b6df2;
-    color: white;
-    font-size: 14px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #080808;
+    font-family: 'Fragment Mono', monospace;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s var(--ease-out);
 }
 
 button.add:hover {
-    background: #5a85ff;
+    background: var(--highlight);
+    border-color: var(--highlight);
 }
 
-/* ---- Mobile Fixes ---- */
+/* ── Mobile Tweaks ── */
 @media (max-width: 480px) {
+    body {
+        padding: 16px 14px;
+    }
     .note-item {
-        padding: 5px;
-        gap: 5px;
-        padding: 4px 8px;     /* reduced height */
-        margin-bottom: 4px;   /* tighter spacing */
+        padding: 6px 8px;
+        margin-bottom: 6px;
     }
-
     .note-text {
-        font-size: 16px;
+        font-size: 13px;
     }
-
     .icon-button {
-        font-size: 18px;
-        padding: 8px 10px;
+        font-size: 15px;
+        padding: 6px 8px;
     }
 }
 
-/* ---- Tab Navigation ---- */
+/* ── Tab Navigation ── */
 .tab-navigation {
     display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-    border-bottom: 1px solid #2c2c2c;
-    padding-bottom: 8px;
+    gap: 20px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 0;
 }
 
 .tab-button {
-    padding: 6px 12px;
+    padding: 8px 4px 12px 4px;
     border: none;
     background: transparent;
-    color: #888;
-    font-size: 14px;
+    color: var(--mid);
+    font-family: 'Fragment Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
     cursor: pointer;
-    transition: color 0.2s, border-bottom 0.2s;
+    transition: all 0.2s var(--ease-out);
     border-bottom: 2px solid transparent;
-    margin-bottom: -10px;
-    padding-bottom: 16px;
+    margin-bottom: -1px;
 }
 
 .tab-button:hover {
-    color: #ccc;
+    color: var(--text);
 }
 
 .tab-button.active {
-    color: #3b6df2;
-    border-bottom-color: #3b6df2;
+    color: var(--accent);
+    border-bottom-color: var(--accent);
 }
 
-/* ---- Day Select Dropdown ---- */
+/* ── Day Select Dropdown ── */
 .day-select {
-    padding: 4px 6px;
+    padding: 4px 8px;
     border-radius: 4px;
-    border: 1px solid #2a2a2a;
-    background: #151515;
-    color: #aaa;
-    font-size: 12px;
+    border: 1px solid var(--line);
+    background: #0d0d0d;
+    color: var(--mid);
+    font-family: 'Fragment Mono', monospace;
+    font-size: 11px;
     cursor: pointer;
-    transition: color 0.15s, border-color 0.15s;
+    outline: none;
+    transition: all 0.15s var(--ease-out);
 }
 
 .day-select:hover {
-    color: #ddd;
-    border-color: #3a3a3a;
+    color: var(--text);
+    border-color: var(--line-hover);
 }
 
 .day-select:focus {
-    outline: none;
-    color: #fff;
-    border-color: #3b6df2;
-    background: #1a1a1a;
+    color: var(--accent);
+    border-color: #383838;
+    background: #121212;
 }
 
-/* ---- Week View ---- */
+/* ── Week View ── */
 .week-view {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 16px;
-    margin-top: 16px;
+    margin-top: 20px;
 }
 
 .day-card {
-    background: #1e1e1e;
-    border: 1px solid #2c2c2c;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
     border-radius: 8px;
-    padding: 14px;
-    transition: border-color 0.2s, background 0.2s;
+    padding: 16px;
+    transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
 }
 
 .day-card:hover {
-    border-color: #3a3a3a;
-    background: #232323;
+    border-color: var(--line-hover);
+    background: var(--card-hover);
 }
 
 .day-header {
-    font-weight: 600;
-    font-size: 1em;
-    color: #3b6df2;
-    margin-bottom: 12px;
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 14px;
     padding-bottom: 8px;
-    border-bottom: 1px solid #2c2c2c;
+    border-bottom: 1px solid var(--line);
 }
 
 .day-todos {
@@ -423,20 +514,38 @@ button.add:hover {
     gap: 6px;
 }
 
+.day-todos .add-todo-input {
+    margin-top: 4px;
+    margin-bottom: 10px;
+    gap: 6px;
+}
+
+.day-todos .add-todo-input input {
+    padding: 8px 10px;
+    font-size: 12px;
+}
+
+.day-todos .add-todo-input button.add {
+    padding: 8px 12px;
+    font-size: 10px;
+    flex-shrink: 0;
+}
+
 .week-todo {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #151515;
-    border: 1px solid #2a2a2a;
+    background: #090909;
+    border: 1px solid #181818;
     border-radius: 6px;
-    padding: 8px 10px;
+    padding: 8px 12px;
     gap: 8px;
+    font-size: 13px;
 }
 
 .week-todo-text {
     flex: 1;
-    color: #e8e8e8;
+    color: var(--text);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -445,7 +554,7 @@ button.add:hover {
 
 .week-todo-actions {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     flex: 0 0 auto;
 }
 
