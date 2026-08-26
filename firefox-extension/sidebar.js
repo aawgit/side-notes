@@ -234,6 +234,120 @@ function getTodoRef(groupId, todoId) {
     return { group, todo };
 }
 
+function isHiddenGroup(group) {
+    return Boolean(group?.hidden || group?.title?.startsWith('__'));
+}
+
+function getDayNotesGroup() {
+    return groups.find(group => isHiddenGroup(group)) || null;
+}
+
+function startTodoDrag(event, item, groupId, todoId) {
+    dragging = { groupId, todoId };
+    item._dragXStart = event.clientX || 0;
+    item.classList.add('dragging');
+
+    if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', todoId);
+    }
+}
+
+function updateTodoDrag(item, event) {
+    if (event.clientX === 0) return;
+    const deltaX = event.clientX - (item._dragXStart || 0);
+    item.style.transform = `translateX(${deltaX}px)`;
+    item.style.opacity = deltaX > 180 ? 0.5 : 1;
+}
+
+function endTodoDrag(item, groupId, todoId, event) {
+    item.classList.remove('dragging');
+    const deltaX = event.clientX - (item._dragXStart || 0);
+    item.style.transform = 'translateX(0)';
+    item.style.opacity = 1;
+
+    if (deltaX > 150) {
+        dragging = null;
+        deleteTodo(groupId, todoId);
+        return;
+    }
+
+    dragging = null;
+}
+
+function moveDraggedTodo(targetGroupId, targetTodoId = null) {
+    if (!dragging) return;
+
+    const sourceGroup = groups.find(g => g.id === dragging.groupId);
+    const targetGroup = groups.find(g => g.id === targetGroupId);
+    if (!sourceGroup || !targetGroup) return;
+
+    const sourceIndex = sourceGroup.todos.findIndex(t => t.id === dragging.todoId);
+    if (sourceIndex === -1) return;
+
+    const targetIndex = targetTodoId == null
+        ? targetGroup.todos.length
+        : targetGroup.todos.findIndex(t => t.id === targetTodoId);
+    if (targetTodoId != null && targetIndex === -1) return;
+
+    if (sourceGroup.id === targetGroup.id && targetTodoId === dragging.todoId) return;
+
+    const [draggedTodo] = sourceGroup.todos.splice(sourceIndex, 1);
+    let insertIndex = targetIndex;
+
+    if (targetTodoId != null && sourceGroup.id === targetGroup.id && sourceIndex < targetIndex) {
+        insertIndex -= 1;
+    }
+
+    targetGroup.todos.splice(insertIndex, 0, draggedTodo);
+
+    if (sourceGroup.todos.length === 0 && sourceGroup.id !== targetGroup.id) {
+        trackDeletedId(sourceGroup.id);
+        groups.splice(groups.indexOf(sourceGroup), 1);
+    }
+
+    dragging = null;
+    save();
+    scheduleSyncAfterEdit();
+    render();
+}
+
+function moveDraggedTodoInDay(day, targetTodoId = null) {
+    if (!dragging) return;
+
+    const group = getDayNotesGroup();
+    if (!group) return;
+
+    const sourceIndex = group.todos.findIndex(todo => todo.id === dragging.todoId && todo.day === day);
+    if (sourceIndex === -1) return;
+
+    const [draggedTodo] = group.todos.splice(sourceIndex, 1);
+
+    if (targetTodoId == null) {
+        const lastDayIndex = group.todos.reduce((lastIndex, todo, index) => {
+            return todo.day === day ? index : lastIndex;
+        }, -1);
+
+        if (lastDayIndex === -1) {
+            group.todos.push(draggedTodo);
+        } else {
+            group.todos.splice(lastDayIndex + 1, 0, draggedTodo);
+        }
+    } else {
+        const targetIndex = group.todos.findIndex(todo => todo.id === targetTodoId && todo.day === day);
+        if (targetIndex === -1) {
+            group.todos.push(draggedTodo);
+        } else {
+            group.todos.splice(targetIndex, 0, draggedTodo);
+        }
+    }
+
+    dragging = null;
+    save();
+    scheduleSyncAfterEdit();
+    render();
+}
+
 function ensureDescriptionEditor() {
     let backdrop = document.getElementById('descriptionEditorBackdrop');
     if (backdrop) return backdrop;
@@ -375,7 +489,7 @@ function renderTabNavigation() {
         render();
     };
     tabNav.appendChild(currentBtn);
-    
+
     const weekBtn = document.createElement('button');
     weekBtn.className = `tab-button ${currentTab === 'week' ? 'active' : ''}`;
     weekBtn.textContent = 'Next 7 Days';
@@ -385,14 +499,14 @@ function renderTabNavigation() {
     };
     tabNav.appendChild(weekBtn);
 }
-
+    
 function renderCurrentView() {
     const container = document.getElementById('groupsContainer');
     container.innerHTML = '';
 
     groups.forEach((group) => {
         // Skip hidden groups (starting with __)
-        if (group.title.startsWith('__')) return;
+        if (isHiddenGroup(group)) return;
         const groupId = group.id;
 
         const g = document.createElement('div');
@@ -449,60 +563,35 @@ function renderCurrentView() {
             addInput.appendChild(btn);
             list.appendChild(addInput);
 
+            list.addEventListener('dragover', (event) => {
+                event.preventDefault();
+            });
+
+            list.addEventListener('drop', (event) => {
+                event.preventDefault();
+                if (event.target !== list) return;
+                moveDraggedTodo(groupId);
+            });
+
             group.todos.forEach((todo) => {
                 const todoId = todo.id;
                 const item   = document.createElement('div');
                 item.className = 'todo';
                 item.draggable = true;
-                let dragXStart = 0;
-
-                item.ondragstart = () => {
-                    dragging   = { groupId, todoId };
-                    dragXStart = event.clientX;
-                    item.classList.add('dragging');
-                };
-
-                item.ondrag = (event) => {
-                    if (event.clientX === 0) return;
-                    const deltaX = event.clientX - dragXStart;
-                    item.style.transform = `translateX(${deltaX}px)`;
-                    if (deltaX > 180) item.style.opacity = 0.5;
-                };
-
-                item.ondragend = (event) => {
-                    item.classList.remove('dragging');
-                    const deltaX = event.clientX - dragXStart;
-                    item.style.transform = 'translateX(0)';
-                    item.style.opacity   = 1;
-                    if (deltaX > 150) { deleteTodo(groupId, todoId); return; }
-                };
-
-                item.ondragover = (e) => e.preventDefault();
-
-                item.ondrop = () => {
-                    if (!dragging) return;
-                    const srcGroup = groups.find(g => g.id === dragging.groupId);
-                    if (!srcGroup) return;
-                    const srcIdx = srcGroup.todos.findIndex(t => t.id === dragging.todoId);
-                    if (srcIdx === -1) return;
-
-                    const [dragged] = srcGroup.todos.splice(srcIdx, 1);
-                    const tgtGroup  = groups.find(g => g.id === groupId);
-                    const tgtIdx    = tgtGroup.todos.findIndex(t => t.id === todoId);
-                    tgtGroup.todos.splice(tgtIdx, 0, dragged);
-
-                    if (srcGroup.todos.length === 0 && srcGroup.id !== groupId) {
-                        trackDeletedId(srcGroup.id);
-                        groups.splice(groups.indexOf(srcGroup), 1);
-                    }
-
-                    save();
-                    render();
-                };
+                item.addEventListener('dragstart', (event) => startTodoDrag(event, item, groupId, todoId));
+                item.addEventListener('drag', (event) => updateTodoDrag(item, event));
+                item.addEventListener('dragend', (event) => endTodoDrag(item, groupId, todoId, event));
+                item.addEventListener('dragover', (event) => event.preventDefault());
+                item.addEventListener('drop', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    moveDraggedTodo(groupId, todoId);
+                });
 
                 const wrapper = document.createElement('div');
                 wrapper.className = 'note-item';
-                wrapper.addEventListener('click', () => {
+                item.addEventListener('click', (event) => {
+                    if (event.target.closest('button, select')) return;
                     openDescriptionEditor(groupId, todoId);
                 });
 
@@ -515,16 +604,6 @@ function renderCurrentView() {
                 actions.addEventListener('click', (e) => {
                     e.stopPropagation();
                 });
-
-                const upBtn = document.createElement('button');
-                upBtn.className   = 'icon-button up';
-                upBtn.textContent = '⬆';
-                upBtn.addEventListener('click', () => moveTodo(groupId, todoId, -1));
-
-                const downBtn = document.createElement('button');
-                downBtn.className   = 'icon-button down';
-                downBtn.textContent = '⬇';
-                downBtn.addEventListener('click', () => moveTodo(groupId, todoId, 1));
 
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className   = 'icon-button delete';
@@ -547,6 +626,7 @@ function renderCurrentView() {
 
                 const daySelect = document.createElement('select');
                 daySelect.className = 'day-select';
+
                 daySelect.addEventListener('change', (e) => {
                     setTodoDay(groupId, todoId, e.target.value || null);
                 });
@@ -566,8 +646,6 @@ function renderCurrentView() {
                 daySelect.value = todo.day || '';
 
                 actions.appendChild(daySelect);
-                actions.appendChild(upBtn);
-                actions.appendChild(downBtn);
                 actions.appendChild(copyBtn);
                 actions.appendChild(deleteBtn);
 
@@ -604,6 +682,16 @@ function renderWeekView() {
 
         const todoList = document.createElement('div');
         todoList.className = 'day-todos';
+        todoList.addEventListener('dragover', (event) => {
+            event.preventDefault();
+        });
+
+        todoList.addEventListener('drop', (event) => {
+            event.preventDefault();
+            if (event.target !== todoList) return;
+            if (!dragging) return;
+            moveDraggedTodoInDay(day);
+        });
 
         const addInput = document.createElement('div');
         addInput.className = 'add-todo-input';
@@ -635,7 +723,18 @@ function renderWeekView() {
         todos.forEach(todo => {
             const todoEl = document.createElement('div');
             todoEl.className = 'week-todo';
-            todoEl.addEventListener('click', () => {
+            todoEl.draggable = true;
+            todoEl.addEventListener('dragstart', (event) => startTodoDrag(event, todoEl, todo.groupId, todo.id));
+            todoEl.addEventListener('drag', (event) => updateTodoDrag(todoEl, event));
+            todoEl.addEventListener('dragend', (event) => endTodoDrag(todoEl, todo.groupId, todo.id, event));
+            todoEl.addEventListener('dragover', (event) => event.preventDefault());
+            todoEl.addEventListener('drop', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                moveDraggedTodoInDay(day, todo.id);
+            });
+            todoEl.addEventListener('click', (event) => {
+                if (event.target.closest('button, select')) return;
                 openDescriptionEditor(todo.groupId, todo.id);
             });
 
@@ -693,12 +792,15 @@ function addTodoToDay(day, text) {
         targetGroup = {
             id:            crypto.randomUUID(),
             title:         '__Day Notes__',
+            hidden:        true,
             todos:         [],
             collapsed:     false,
             _lastModified: Date.now(),
             _deviceId:     getDeviceId(),
         };
         groups.unshift(targetGroup);
+    } else {
+        targetGroup.hidden = true;
     }
 
     targetGroup.todos.unshift({
