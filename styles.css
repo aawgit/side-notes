@@ -499,6 +499,15 @@ button.add:hover {
     transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
 }
 
+@media (min-width: 1130px) {
+    .week-view {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    .day-card-today {
+        grid-column: span 3;
+    }
+}
+
 .day-card:hover {
     border-color: var(--line-hover);
     background: var(--card-hover);

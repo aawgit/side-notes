@@ -15,10 +15,21 @@ It is designed for simplicity, speed, and privacy, using `localStorage` to persi
 
 ## How to Run
 
-### 🌐 As a Web App
-1. Clone or download this repository.
-2. Open the `index.html` file in any modern web browser.
-3. The app runs entirely offline.
+### 🌐 Hosted Web App
+Use it directly at https://aawgit.github.io/side-notes/ — no installation needed.
+
+### 💻 Run Locally
+Serve the project root with any static server (the app uses ES modules and a service worker, so opening `index.html` via `file://` won't work):
+
+```bash
+git clone https://github.com/aawgit/side-notes.git
+cd side-notes
+python3 -m http.server 8000
+```
+
+Then open http://localhost:8000. If you see stale files, hard-reload (Ctrl+Shift+R) or unregister the service worker in DevTools → Application.
+
+Run tests with `npm test`.
 
 ### 🦊 As a Firefox Extension
 1. Open Firefox and navigate to `about:debugging`.
