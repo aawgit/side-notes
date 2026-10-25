@@ -669,11 +669,11 @@ function renderWeekView() {
     const weekView = document.createElement('div');
     weekView.className = 'week-view';
 
-    getNextDays(7).forEach(day => {
+    getNextDays(7).forEach((day, index) => {
         const todos = getTodosForDay(day);
         
         const dayCard = document.createElement('div');
-        dayCard.className = 'day-card';
+        dayCard.className = index === 0 ? 'day-card day-card-today' : 'day-card';
 
         const dayHeader = document.createElement('div');
         dayHeader.className = 'day-header';
